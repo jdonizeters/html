@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Case START — Simulação Protheus</title>
+<style>
+:root{
+  --ink:#12161c; --graphite:#1c232c; --slate:#39434f; --line:#d5dae0;
+  --paper:#f2f3f5; --card:#fff; --accent:#0b6b6b; --accent-soft:#e3f0ef;
+  --input:#fff6c9; --input-line:#c9ac1f;
+  --ok:#1c7a45; --bad:#a52222; --muted:#6b7580;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font:15px/1.5 "Segoe UI",system-ui,-apple-system,sans-serif}
+.num{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-variant-numeric:tabular-nums}
+
+header{background:var(--ink);color:#fff;padding:14px 22px;display:flex;align-items:center;
+  gap:18px;flex-wrap:wrap;border-bottom:3px solid var(--accent)}
+header h1{font-size:16px;margin:0;font-weight:600;letter-spacing:.02em}
+header .sub{color:#93a0ac;font-size:13px}
+header .spacer{flex:1}
+button{font:inherit;border:1px solid var(--line);background:#fff;color:var(--ink);
+  padding:7px 13px;border-radius:5px;cursor:pointer}
+button:hover{background:#eef1f3}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{background:#095656}
+header button{border-color:#3b4652;background:#232b34;color:#e8ecef}
+header button:hover{background:#2f3945}
+header button.primary{background:var(--accent);border-color:var(--accent)}
+
+.wrap{display:flex;min-height:calc(100vh - 60px);align-items:stretch}
+nav{width:236px;flex:none;background:var(--graphite);padding:10px 0 30px}
+nav .grp{color:#78838f;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:16px 18px 6px}
+nav a{display:flex;align-items:center;gap:9px;padding:8px 18px;color:#c3cbd3;text-decoration:none;
+  font-size:14px;cursor:pointer;border-left:3px solid transparent}
+nav a:hover{background:#242c36;color:#fff}
+nav a.on{background:#0f1419;color:#fff;border-left-color:var(--accent)}
+nav a .dot{width:7px;height:7px;border-radius:50%;background:#4c5762;flex:none}
+nav a .dot.fill{background:var(--input-line)} nav a .dot.done{background:var(--ok)}
+nav a .dot.none{background:transparent}
+nav a.lock{color:#8b949d;font-size:13px}
+main{flex:1;padding:26px 30px 70px;min-width:0}
+
+.sheet{max-width:1080px}
+.sheet h2{font-size:22px;margin:0 0 4px;font-weight:600}
+.sheet .lead{color:var(--muted);margin:0 0 22px;font-size:14px;max-width:70ch}
+.card{background:var(--card);border:1px solid var(--line);border-radius:7px;padding:18px 20px;margin-bottom:18px}
+.card h3{margin:0 0 14px;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);font-weight:600}
+
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:middle}
+th{background:#eef0f2;font-weight:600;font-size:12px;color:var(--slate);line-height:1.25}
+td.r,th.r{text-align:right}
+tr.total td{background:#f6f7f8;font-weight:600}
+tbody tr:hover td{background:#fbfcfc}
+tr.total:hover td{background:#f6f7f8}
+
+.fields{display:grid;grid-template-columns:minmax(250px,1fr) 210px;gap:9px 16px;align-items:center;max-width:680px}
+.fields label{font-size:14px}
+.fields .hint{grid-column:1/-1;font-size:12.5px;color:var(--muted);margin:-2px 0 6px}
+
+input,select{font:inherit;width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:#fff}
+input.cell,select.cell{background:var(--input);border:1px solid var(--input-line)}
+input.cell:focus,select.cell:focus{outline:2px solid var(--accent);outline-offset:1px}
+input.num{text-align:right}
+input[readonly]{background:#f6f7f8;color:var(--slate);border-color:#e2e6e9;text-align:right}
+td input.cell{border-radius:3px;padding:4px 6px}
+.io{display:flex;align-items:center;gap:6px}
+.io .un{color:var(--muted);font-size:13px;flex:none;width:14px}
+td .io .un{width:auto}
+
+.pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:12px;background:var(--accent-soft);color:var(--accent)}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.kpi div{background:#fff;border:1px solid var(--line);border-radius:7px;padding:13px 15px}
+.kpi .lbl{font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.kpi .val{font-size:21px;margin-top:3px}
+.kpi .val.pos{color:var(--ok)} .kpi .val.neg{color:var(--bad)}
+
+.alerts{display:flex;flex-direction:column}
+.alert{display:grid;grid-template-columns:34px 1fr;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--line)}
+.alert:last-child{border-bottom:0}
+.alert .sig{width:22px;height:22px;border-radius:50%;background:#dfe3e7;margin-left:6px;transition:background .25s,box-shadow .25s}
+.alert.ok .sig{background:var(--ok);box-shadow:0 0 0 4px rgba(28,122,69,.13)}
+.alert.bad .sig{background:var(--bad);box-shadow:0 0 0 4px rgba(165,34,34,.13)}
+.alert.idle .txt{color:var(--muted)} .alert.bad .txt{color:var(--bad)}
+
+.notice{background:#fff9e6;border:1px solid #e6cf7a;border-radius:6px;padding:11px 14px;font-size:13.5px;margin-bottom:18px}
+.fixed{background:#eef7f1;border:1px solid #9dc9ae;border-radius:6px;padding:11px 14px;font-size:13.5px;color:#1a5c36;margin-bottom:18px}
+.foot{font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.5}
+.lockbox{max-width:380px;margin:40px auto;text-align:center}
+.lockbox input{text-align:center;margin:14px 0}
+.err{color:var(--bad);font-size:13px;min-height:18px}
+
+@media (max-width:860px){
+  .wrap{flex-direction:column}
+  nav{width:100%;display:flex;overflow-x:auto;padding:0}
+  nav .grp{display:none}
+  nav a{border-left:0;border-bottom:3px solid transparent;white-space:nowrap}
+  nav a.on{border-left:0;border-bottom-color:var(--accent)}
+  main{padding:18px 14px 60px}
+  .fields{grid-template-columns:1fr}
+}
+
+/* ---------- Gestão à Vista, gráficos, projeção ---------- */
+.painel{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+@media (max-width:1000px){.painel{grid-template-columns:1fr}}
+.chart{width:100%;height:auto;display:block}
+.chart text{font-family:"Segoe UI",system-ui,sans-serif}
+.chart .lbl{font-size:11px;fill:var(--muted)}
+.chart .val{font-size:11px;fill:var(--slate);font-family:ui-monospace,Consolas,monospace}
+.chart .axis{stroke:var(--line);stroke-width:1}
+.chart .zero{stroke:#9aa4ae;stroke-width:1;stroke-dasharray:3 3}
+.vazio{padding:34px 16px;text-align:center;color:var(--muted);font-size:13.5px;
+  border:1px dashed var(--line);border-radius:6px;background:#fafbfb}
+
+.prog{height:8px;background:#e6e9ec;border-radius:6px;overflow:hidden;margin:10px 0 6px}
+.prog i{display:block;height:100%;background:var(--accent);transition:width .3s}
+
+/* semáforo acessível: cor + forma + símbolo */
+.alert .sig{display:flex;align-items:center;justify-content:center;color:#fff;
+  font-weight:700;font-size:13px;line-height:1}
+.alert.ok  .sig{border-radius:50%}
+.alert.bad .sig{border-radius:3px;transform:rotate(45deg)}
+.alert.bad .sig span{transform:rotate(-45deg)}
+
+.slider{display:flex;align-items:center;gap:12px}
+.slider input[type=range]{flex:1;accent-color:var(--accent);background:transparent;padding:0}
+.slider .v{width:82px;text-align:right;font-family:ui-monospace,Consolas,monospace;font-size:16px}
+.faixa{font-size:13px;color:var(--slate);margin-top:10px}
+.faixa b{color:var(--ok)}
+
+/* modo projeção */
+body.proj{font-size:18px}
+body.proj .kpi .val{font-size:30px}
+body.proj .kpi .lbl{font-size:13px}
+body.proj table{font-size:16px}
+body.proj th{font-size:14px}
+body.proj .alert .txt{font-size:17px}
+body.proj .alert .sig{width:28px;height:28px}
+body.proj nav{display:none}
+body.proj main{padding:22px 40px}
+body.proj .lead{font-size:16px}
+body.proj .chart text{font-size:13px}
+
+@media print{
+  header,nav,.notice,button{display:none!important}
+  body{background:#fff}
+  main{padding:0}
+  .card{break-inside:avoid;border-color:#bbb}
+  .sheet{max-width:none}
+  a[href]:after{content:""}
+}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Case START <span class="sub">· Simulação ERP Protheus</span></h1>
+  <span class="spacer"></span>
+  <button id="btnProj" title="Amplia tipos e esconde o menu, para datashow">Modo projeção</button>
+  <button id="btnImport">Carregar respostas</button>
+  <input type="file" id="fileImport" accept=".json" hidden>
+  <button id="btnCsv">Baixar CSV</button>
+  <button class="primary" id="btnExport">Salvar respostas (.json)</button>
+</header>
+
+<div class="wrap">
+<nav id="nav"></nav>
+<main id="main"></main>
+</div>
+
+<script>
+/* =====================================================================
+   CASE START — motor de cálculo
+   Replica as fórmulas da planilha "Case Planilha 2026".
+   ===================================================================== */
+
+/* --- semântica Excel --- */
+const round=(v,d=0)=>{ if(!isFinite(v))return NaN;
+  const f=Math.pow(10,d), n2=v*f, r=Math.round(Math.abs(n2)+1e-9)*Math.sign(n2); return r/f; };
+const INT=v=>Math.floor(v);
+const CEIL=v=>Math.ceil(v-1e-9);
+const ok=v=>typeof v==="number"&&isFinite(v);
+const n=v=>ok(v)?v:0;
+const SUM=(arr,k)=>arr.reduce((a,r)=>a+n(r[k]),0);   // SUM ignora vazios, como no Excel
+
+/* --- leitura de número no padrão pt-BR: "1.234,56" -> 1234.56 --- */
+function num(v){
+  if(v===null||v===undefined) return 0;
+  let s=String(v).trim().replace(/\s|R\$|%/g,"");
+  if(s==="") return 0;
+  if(s.includes(",")) s=s.replace(/\./g,"").replace(",",".");
+  const x=parseFloat(s);
+  return isFinite(x)?x:0;
+}
+const pct=v=>num(v)/100;                 // campo digitado como 1,65 -> 0,0165
+const vazio=v=>String(v??"").trim()==="";
+
+/* =====================================================================
+   SETUP — parâmetros do jogo (guia protegida por senha)
+   ===================================================================== */
+const SENHA_SETUP="start@123";
+let setupLiberado=false;
+
+const SETUP_PADRAO={
+  capitalSocial:200000, icms:0.18, precoMax:4.70, lucroMin:20000,
+  precoForno1:20000, precoForno2:32000, precoForno3:12000,
+  capForno1:50, capForno2:100, capForno3:40,
+  margemPC:1.66, fretePC1:0.03, fretePC2:0.05, paesPorCaixa:5,
+  valeTransporte:300, cestaBasica:200, encargos:0.40,
+  energia:0.04, agua:0.02, licencaNF:100, combustivel:0.03, gas:0.04,
+  higiene:250, copaCozinha:200, despBancariaDia:1.50, encFinanceiros:0.005,
+  capacidadeLocalFornos:4, aluguelMin:2000,
+  salMinPadeiro:1748.80, salMinAdm:1486, salMinEntregas:1238,
+  multiplicadorCompra:1.10, provisaoIRCS:3000,
+  /* Setup C18 — produtividade do padeiro (na planilha é fórmula) */
+  bonusCesta:0.02,
+  faixaSal1:1611, bonusSal1:0.01,
+  faixaSal2:2600, bonusSal2:0.02,
+  faixaSal3:3600, bonusSal3:0.04,
+                 bonusSal4:0.06,
+  /* Setup C19 — produtividade da semana, por opção de horário */
+  prodSemana1:1.00, prodSemana2:0.94,
+  /* Setup C51..C54 — presentes na planilha, sem uso em fórmula */
+  salSugAdm:1486, salSugAss:1238, irpjRef:0.15, csllRef:0.09
+};
+
+/* Setup C38:C50 — checklist de preparação do ambiente Protheus.
+   Nenhuma dessas células é referenciada por fórmula na planilha. */
+const CHECKLIST=[
+  "Calendário","Taxas da moeda","Parâmetro MV_ULMES","Parâmetro MV_ULTDEPR",
+  "Alterar data do lançamento de capital (SE5)","Contabilizar off lançamento do capital",
+  "Excluir lançamento anterior capital da contabilidade",
+  "Informar no PPT qual a data de inclusão do ativo",
+  "Copiar ativo para dia 01 do mês do treinamento",
+  "Alterar data dos lançamentos despesas do financeiro",
+  "Recontabilizar despesas financeiro","Excluir lançamentos anteriores","Recalcular saldo bancário"
+];
+const CHK={}; CHECKLIST.forEach((_,i)=>CHK[i]=true);
+/* tipo: moeda | num | pct  (pct = digitado em %, guardado em decimal) */
+const SETUP_CAMPOS=[
+  ["Constituição",[
+    ["capitalSocial","Capital social","moeda"],
+    ["icms","Alíquota de ICMS","pct"],
+    ["provisaoIRCS","Provisão IRPJ + CSLL (despesa)","moeda"]]],
+  ["Metas do case",[
+    ["precoMax","Preço máximo de venda (por pão)","moeda"],
+    ["lucroMin","Lucro mínimo desejado","moeda"]]],
+  ["Fornos",[
+    ["precoForno1","Preço do forno 1","moeda"],["capForno1","Capacidade do forno 1","num"],
+    ["precoForno2","Preço do forno 2","moeda"],["capForno2","Capacidade do forno 2","num"],
+    ["precoForno3","Preço do forno 3","moeda"],["capForno3","Capacidade do forno 3","num"],
+    ["capacidadeLocalFornos","Fornos que o imóvel comporta","num"]]],
+  ["Compras",[
+    ["margemPC","Margem no pedido de compra","num"],
+    ["multiplicadorCompra","Multiplicador para comprar a mais","num"],
+    ["fretePC1","Frete do PC1","pct"],["fretePC2","Frete do PC2","pct"]]],
+  ["Produto e pessoal",[
+    ["paesPorCaixa","Quantidade de pães por caixa","num"],
+    ["valeTransporte","Vale transporte por pessoa","moeda"],
+    ["cestaBasica","Cesta básica por pessoa","moeda"],
+    ["encargos","Encargos sobre a folha","pct"]]],
+  ["Despesas",[
+    ["energia","Energia (por pão)","moeda"],["agua","Água (por pão)","moeda"],
+    ["gas","Gás (por pão)","moeda"],["combustivel","Combustível (por pão)","moeda"],
+    ["licencaNF","Licença do software de NF","moeda"],
+    ["higiene","Material de higiene e limpeza","moeda"],
+    ["copaCozinha","Copa e cozinha","moeda"],
+    ["despBancariaDia","Despesa bancária por dia","moeda"],
+    ["encFinanceiros","Encargos financeiros","pct"]]],
+  ["Limites de aceitação",[
+    ["aluguelMin","Valor mínimo do aluguel","moeda"],
+    ["salMinPadeiro","Salário mínimo do padeiro","moeda"],
+    ["salMinAdm","Salário mínimo do aux. administrativo","moeda"],
+    ["salMinEntregas","Salário mínimo do assist. de entregas","moeda"]]],
+  ["Produtividade do padeiro (C18)",[
+    ["bonusCesta","Bônus por cesta básica","pct"],
+    ["faixaSal1","Faixa 1 — salário até","moeda"],["bonusSal1","Bônus da faixa 1","pct"],
+    ["faixaSal2","Faixa 2 — salário até","moeda"],["bonusSal2","Bônus da faixa 2","pct"],
+    ["faixaSal3","Faixa 3 — salário até","moeda"],["bonusSal3","Bônus da faixa 3","pct"],
+    ["bonusSal4","Bônus acima da faixa 3","pct"]]],
+  ["Produtividade da semana (C19)",[
+    ["prodSemana1","Opção 1 — Seg/Sex","pct"],
+    ["prodSemana2","Opção 2 — Seg/Sex + Sábado","pct"]]],
+  ["Presentes na planilha, sem uso em fórmula (C51:C54)",[
+    ["salSugAdm","Salário bruto Auxiliar Administrativo","moeda"],
+    ["salSugAss","Salário bruto Assistente de Entregas","moeda"],
+    ["irpjRef","IRPJ","pct"],["csllRef","CSLL","pct"]]]
+];
+const TIPO_SETUP={}; SETUP_CAMPOS.forEach(([,cs])=>cs.forEach(([k,,t])=>TIPO_SETUP[k]=t));
+
+/* texto digitado nos campos de Setup; vazio = usa o padrão */
+const SRAW={};
+function buildS(){
+  const S={};
+  for(const k in SETUP_PADRAO){
+    if(!(k in SRAW) || vazio(SRAW[k])) { S[k]=SETUP_PADRAO[k]; continue; }
+    S[k]= TIPO_SETUP[k]==="pct" ? pct(SRAW[k]) : num(SRAW[k]);
+  }
+  S.precoForno=[S.precoForno1,S.precoForno2,S.precoForno3];
+  S.capForno=[S.capForno1,S.capForno2,S.capForno3];
+  S.processo=[["Preparar ingredientes",15],["Sovar",10],["1a. fermentação",60],
+    ["2a. fermentação",45],["Moldar/forma",15],["Assar",30],["Esfriar",20],
+    ["Embalar",10],["Setup",15]];
+  return S;
+}
+function setupValor(k){ // valor exibido no campo
+  if(k in SRAW) return SRAW[k];
+  const v=SETUP_PADRAO[k];
+  return TIPO_SETUP[k]==="pct" ? fmt(v*100,2) : fmt(v,2);
+}
+
+const SIM="S=Sim", NAO="N=Não";
+const REGIMES=["Lucro Real","Lucro Presumido"];
+/* alíquotas usuais de PIS/COFINS por regime — usadas apenas como sugestão de preenchimento */
+const SUGESTAO={"Lucro Real":{pis:"1,65",cofins:"7,60"},"Lucro Presumido":{pis:"0,65",cofins:"3,00"}};
+const HORARIOS=["1-Seg/Sex 08:00 as 17:00","2-Seg/Sex 08:00 as 17:00 e Sab das 08:00 as 12:00"];
+
+/* --- catálogos --- */
+const MP=[
+  {nome:"Farinha de trigo",        g600:360,          un:"Quilos"},
+  {nome:"Leite integral",          g600:INT(360*0.50),un:"Litros"},
+  {nome:"Óleo de soja",            g600:INT(360*0.04),un:"Litros"},
+  {nome:"Açucar refinado",         g600:INT(360*0.10),un:"Quilos"},
+  {nome:"Sal refinado",            g600:INT(360*0.02),un:"Quilos"},
+  {nome:"Fermento biológico seco", g600:3,            un:"Quilos"}
+];
+const EMB=[
+  {nome:"Saco plástico e lacre para embalar o pão", qt600:1,   un:"Unidade"},
+  {nome:"Caixa de pães",                            qt600:0.2, un:"Unidade"}
+];
+/* PC2: [nome, qtde fixa (null = calculada), preço fixo (null = do Setup/participante)] */
+const EQUIP=[
+  ["Masseira para pães",null,9000],
+  ["Resfriador e dosador de água",1,2500],
+  ["Mesa de Inox",1,400],
+  ["Balança",1,700],
+  ["Divisora de pães",1,1500],
+  ["Formas para os pães",1,7000],
+  ["Fatiadora de pães",1,4000],
+  ["Camara de fermentação",1,6000],
+  ["Forno industrial para assar pães",null,null],   // preço = opção escolhida
+  ["Móveis e Utensílios",1,2400],
+  ["Compuradores c/SO Windows e Impressora",1,null] // preço = participante
+];
+
+/* --- respostas do participante (sempre texto, como digitado) --- */
+const I={
+  nome:"", email:"",
+  regime:REGIMES[0],
+  pis:"", cofins:"", irpj:"", csll:"",                 // %
+  salPadeiro:"", salAdm:"", salEntregas:"",            // R$
+  vt:"", cesta:"", motivoVT:"",
+  horario:HORARIOS[0],
+  conv:["","","","","",""],                            // gramas p/ pão de 450 g
+  opcaoForno:1, qtdeFornos:"",
+  precoMP:["","","","","",""], linkMP:["","","","","",""],
+  precoComputador:"", linkComputador:"",
+  depreciacao:["","",""],                              // % ao ano
+  aluguel:"",                                          // R$
+  margemLucro:""                                       // %
+};
+
+/* =====================================================================
+   MOTOR
+   ===================================================================== */
+function calc(){
+  const S=buildS(), m={S};
+
+  /* Fiscais — percentuais digitados em % */
+  const icms=S.icms, pis=pct(I.pis), cofins=pct(I.cofins), irpj=pct(I.irpj), csll=pct(I.csll);
+  m.fiscais={icms,pis,cofins,irpj,csll};
+
+  /* Salários */
+  const salPad=num(I.salPadeiro), salAdm=num(I.salAdm), salAss=num(I.salEntregas);
+
+  /* Produtividade (Setup C18/C19) */
+  const bonusCesta = I.cesta===SIM ? S.bonusCesta : 0;
+  const bonusSal = salPad<=S.faixaSal1 ? S.bonusSal1
+                 : salPad<=S.faixaSal2 ? S.bonusSal2
+                 : salPad<=S.faixaSal3 ? S.bonusSal3 : S.bonusSal4;
+  const prodPadeiro = 1 + bonusCesta + bonusSal;
+  const opVol = parseInt(I.horario.charAt(0),10);
+  const prodSemana = [S.prodSemana1,S.prodSemana2][opVol-1];
+  m.prod={bonusCesta,bonusSal};
+
+  /* Estrutura do produto — E = D × qtde_por_caixa (Eng C13 = Setup C17) */
+  const conv=I.conv.map(num);
+  const cx=S.paesPorCaixa;
+  const estr=MP.map((p,i)=>({...p,d:conv[i],e:conv[i]*cx,g:conv[i]*cx/1000}));
+  const emb =EMB.map(p=>({...p,d:p.qt600,e:p.qt600*cx,g:p.qt600*cx}));
+  m.estr={mp:estr,emb,peso600:MP.reduce((a,p)=>a+p.g600,0),
+          peso450:conv.reduce((a,v)=>a+v,0), consumo5:conv.reduce((a,v)=>a+v,0)*cx};
+
+  /* Engenharia de fabricação */
+  const tempoMin=S.processo.reduce((a,p)=>a+p[1],0), tempoHr=round(tempoMin/60,1);
+  const horasSemana=8, horasSabado=[0,4][opVol-1];
+  const fornDia=INT(horasSemana/tempoHr), fornSab=INT(horasSabado/tempoHr);
+  const qtdeFornos=num(I.qtdeFornos);
+  const capFornos = qtdeFornos>0 ? S.capForno[I.opcaoForno-1]*qtdeFornos : NaN;
+  const diasMes=INT(round(((365-104-12)+[0,0.5][opVol-1])/12,1));
+  const paesMesRaw=((fornDia+fornSab)*capFornos)*diasMes*prodPadeiro*prodSemana;
+  const paesMes = ok(paesMesRaw)?paesMesRaw:null;
+  const caixasMes = ok(paesMes)&&cx>0 ? INT(paesMes/cx) : null;   // qtde_paes
+  const QP=caixasMes;
+  m.eng={opVol,horasSemana,horasSabado,masseiras:2,fornDia,fornSab,
+         capFornos:ok(capFornos)?capFornos:null,diasMes,paesMes,cx,caixasMes,
+         tempoMin,tempoHr,prodPadeiro,prodSemana};
+  const modPorPao   = ok(paesMes)&&paesMes>0 ? round(tempoMin/paesMes,4):null;
+  const modPorCaixa = ok(QP)&&QP>0 ? round(tempoMin/QP,4):null;
+  m.estr.modPorPao=modPorPao; m.estr.modPorCaixa=modPorCaixa;
+
+  /* PC1 — Setup: multiplicadorCompra (C55) e margemPC (C14) */
+  const pc1=[];
+  MP.forEach((p,i)=>{
+    const pesq=num(I.precoMP[i]);
+    const qt = ok(QP) ? round((estr[i].e*QP/1000)*S.multiplicadorCompra,0) : null;
+    const pu = S.margemPC!==0 ? round(pesq/S.margemPC,2) : null;
+    pc1.push({nome:p.nome,un:p.un,qt,pu,total:ok(qt)&&ok(pu)?qt*pu:null,pesq,link:I.linkMP[i]});
+  });
+  { const pesq=17.23/100, pu=S.margemPC!==0?round(pesq/S.margemPC,2):null;
+    const qt=ok(paesMes)?round(paesMes*S.multiplicadorCompra,0):null;
+    pc1.push({nome:EMB[0].nome,un:"Unidade",qt,pu,total:ok(qt)&&ok(pu)?qt*pu:null,pesq,fixo:true}); }
+  { const pesq=1, pu=S.margemPC!==0?round(pesq/S.margemPC,2):null;
+    const qt=ok(QP)?round(QP*S.multiplicadorCompra,0):null;
+    pc1.push({nome:EMB[1].nome,un:"Unidade",qt,pu,total:ok(qt)&&ok(pu)?qt*pu:null,pesq,fixo:true}); }
+  m.pc1={itens:pc1,total:SUM(pc1,"total"),frete:S.fretePC1};
+
+  /* NF1 */
+  const nf1=pc1.map(r=>{
+    const g=ok(r.qt)&&ok(r.pu)?r.qt*r.pu:null;
+    return {nome:r.nome,un:r.un,qt:r.qt,pu:r.pu,total:g,
+            icms:ok(g)?round(g*icms,2):null, pis:ok(g)?round(g*pis,2):null,
+            cofins:ok(g)?round(g*cofins,2):null};
+  });
+  const nf1G=SUM(nf1,"total"), nf1H=SUM(nf1,"icms"), nf1I=SUM(nf1,"pis"), nf1J=SUM(nf1,"cofins");
+  const nf1Frete=round(nf1G*S.fretePC1,2);
+  m.nf1={itens:nf1,merc:nf1G,icms:nf1H,pis:nf1I,cofins:nf1J,frete:nf1Frete,total:nf1G+nf1Frete};
+
+  /* PC2 — forno com o preço da opção escolhida (correção) */
+  const masseiras = ok(capFornos)?CEIL(capFornos/400):null;
+  const precoForno = S.precoForno[I.opcaoForno-1];
+  const pc2=EQUIP.map((e,idx)=>{
+    let qt=e[1], pu=e[2];
+    if(idx===0) qt=masseiras;
+    if(idx===8){ qt=qtdeFornos; pu=precoForno; }
+    if(idx===10) pu=num(I.precoComputador);
+    return {nome:e[0],un:"Unidade",qt,pu,total:ok(qt)&&ok(pu)?qt*pu:null};
+  });
+  m.pc2={itens:pc2,total:SUM(pc2,"total"),frete:S.fretePC2,precoForno};
+
+  /* NF2 — impostos somam os 11 itens (correção); frete conforme fórmula G16 (PC1) */
+  const nf2=pc2.map(r=>{
+    const g=r.total;
+    return {nome:r.nome,un:r.un,qt:r.qt,pu:r.pu,total:g,
+            icms:ok(g)?round(g*icms,2):null, pis:ok(g)?round(g*pis,2):null,
+            cofins:ok(g)?round(g*cofins,2):null};
+  });
+  const nf2G=SUM(nf2,"total"), nf2H=SUM(nf2,"icms"), nf2I=SUM(nf2,"pis"), nf2J=SUM(nf2,"cofins");
+  const nf2Frete=round(nf2G*S.fretePC1,2);
+  m.nf2={itens:nf2,merc:nf2G,icms:nf2H,pis:nf2I,cofins:nf2J,frete:nf2Frete,total:nf2G+nf2Frete};
+
+  /* Kardex de entradas: (total − créditos) + rateio do frete, dividido pela quantidade */
+  const custoEnt=r=>{
+    if(!ok(r.total)||nf1G===0||!ok(r.qt)||r.qt===0) return null;
+    return round(((r.total-n(r.icms)-n(r.pis)-n(r.cofins))+(r.total/nf1G*nf1Frete))/r.qt,4);
+  };
+  const kdx=nf1.map(r=>{const cu=custoEnt(r);
+    return {nome:r.nome,un:r.un,qt:r.qt,cu,total:ok(cu)&&ok(r.qt)?round(r.qt*cu,2):null};});
+  m.kardex={itens:kdx,total:SUM(kdx,"total")};
+
+  /* Folha de pagamento */
+  const vtV = I.vt===SIM ? S.valeTransporte : 0;
+  const cbV = I.cesta===SIM ? S.cestaBasica : 0;
+  const linha=(nome,sal,cc)=>({nome,sal,enc:sal*S.encargos,vt:vtV,cb:cbV,
+                               total:sal+sal*S.encargos+vtV+cbV,cc});
+  const folha=[linha("Salário bruto Padeiro",salPad,"Produção"),
+               linha("Salário bruto Auxiliar Administrativo",salAdm,"Administrativo"),
+               linha("Salário bruto Assistente de Entregas",salAss,"Comercial")];
+  m.folha={linhas:folha,total:SUM(folha,"total"),
+           param:{vt:S.valeTransporte,cesta:S.cestaBasica,encargos:S.encargos}};
+
+  /* Despesas */
+  const pm=paesMes;
+  const dsp=[
+    {nome:"Aluguel imóvel (casa com 150 mts no máximo)",cc:"Administrativo",v:num(I.aluguel)},
+    {nome:"Energia",cc:"Produção",v:ok(pm)?round(pm*S.energia,2):null},
+    {nome:"Água",cc:"Produção",v:ok(pm)?round(pm*S.agua,2):null},
+    {nome:"Licença Software emissão NF",cc:"Administrativo",v:S.licencaNF},
+    {nome:"Combústivel",cc:"Comercial",v:ok(pm)?round(pm*S.combustivel,2):null},
+    {nome:"Gás",cc:"Produção",v:ok(pm)?round(pm*S.gas,2):null},
+    {nome:"Material Higiêne & Limpeza",cc:"Produção",v:S.higiene},
+    {nome:"Copa e Cozinha",cc:"Administrativo",v:S.copaCozinha},
+    {nome:"Despesas Bancárias",cc:"Administrativo",v:diasMes*2*S.despBancariaDia},
+    {nome:"IRPJ+CSLL",cc:"Administrativo",v:S.provisaoIRCS}
+  ];
+  m.despesas={itens:dsp,total:SUM(dsp,"v")};
+  const D=k=>dsp[k].v;
+
+  /* Imobilizado — taxa em % ao ano */
+  const rateio=g=>ok(g)&&nf2G!==0 ? g+(g/nf2G*nf2Frete) : null;
+  const prod=SUM(nf2.slice(0,9),"total");
+  const imob=[
+    {nome:"Equipamentos para produção",cc:"Produção",taxa:pct(I.depreciacao[0]),custo:rateio(prod)},
+    {nome:"Móveis e Utensílios",cc:"Administração",taxa:pct(I.depreciacao[1]),custo:rateio(nf2[9].total)},
+    {nome:"Compuradores e Periféricos",cc:"Comercial",taxa:pct(I.depreciacao[2]),custo:rateio(nf2[10].total)}
+  ].map(r=>({...r,dep:ok(r.custo)?r.custo*r.taxa/12:null}));
+  m.imob={itens:imob,custo:SUM(imob,"custo"),dep:SUM(imob,"dep")};
+
+  /* OP e apontamento — quantidade sai de Eng C14 (caixas/mês) */
+  const opItens=[];
+  MP.forEach((p,i)=>{
+    const e=ok(QP)?(estr[i].e*QP)/1000:null, f=kdx[i].cu;
+    opItens.push({nome:p.nome,un:p.un,qt:e,cu:f,total:ok(e)&&ok(f)?round(e*f,2):null});
+  });
+  /* E15/E16 apontam o CONSUMO da produção, não a quantidade comprada.
+     Saco: 1 por pão produzido (Estr.D13 × Eng.C12).  Caixa: Eng.C14.
+     Na planilha original ambos liam NF1!E10/E11 — a quantidade do pedido de compra. */
+  const sacoCons = ok(paesMes) ? CEIL(emb[0].d*paesMes) : null;
+  opItens.push({nome:EMB[0].nome,un:"Unidade",qt:sacoCons,cu:kdx[6].cu,
+    total:ok(sacoCons)&&ok(kdx[6].cu)?round(sacoCons*kdx[6].cu,2):null});
+  opItens.push({nome:EMB[1].nome,un:"Unidade",qt:QP,cu:kdx[7].cu,
+    total:ok(QP)&&ok(kdx[7].cu)?round(QP*kdx[7].cu,2):null});
+  const modQt=ok(modPorCaixa)&&ok(QP)?modPorCaixa*QP:null;
+  const modCu=ok(modQt)&&modQt!==0?folha[0].total/modQt:null;
+  opItens.push({nome:"MOD",un:"HR",qt:modQt,cu:modCu,
+    total:ok(modQt)&&ok(modCu)?round(modQt*modCu,2):null});
+  m.op={op:"000001",produto:`Caixa com ${fmt(cx,0)} pães`,qtde:QP,itens:opItens,total:SUM(opItens,"total")};
+
+  /* Formação de preço */
+  const custoMPEmb=SUM(opItens.slice(0,8),"total");
+  const custoMOD=[D(1),D(2),D(5),imob[0].dep].every(ok)
+    ? folha[0].total+D(1)+D(2)+D(5)+D(6)+imob[0].dep : null;
+  const custoDireto=ok(custoMOD)?custoMPEmb+custoMOD:null;
+  const despAdmCml=[D(0),D(4),imob[1].dep,imob[2].dep].every(ok)
+    ? folha[1].total+folha[2].total+D(0)+D(3)+D(4)+D(7)+D(8)+imob[1].dep+imob[2].dep+D(9) : null;
+  const custoTotal=ok(custoDireto)&&ok(despAdmCml)?custoDireto+despAdmCml:null;
+  const aliq=icms+pis+cofins, margem=pct(I.margemLucro);
+  const soma=aliq+S.encFinanceiros+margem;
+  const markup=soma<1?round(1/(1-soma),4):null;
+  const precoCaixa=ok(custoTotal)&&ok(markup)&&ok(QP)&&QP!==0?(custoTotal*markup)/QP:null;
+  const precoPao=ok(precoCaixa)&&cx>0?round(precoCaixa/cx,2):null;
+  m.fpv={custoMPEmb,custoMOD,custoDireto,despAdmCml,custoTotal,aliq,
+         encFin:S.encFinanceiros,margem,markup,precoCaixa,precoPao,precoMax:S.precoMax};
+
+  /* DRE */
+  const receita=ok(QP)&&ok(precoCaixa)?QP*precoCaixa:null;
+  const impostos=ok(receita)?receita*aliq:null;
+  const rol=ok(receita)&&ok(impostos)?receita-impostos:null;
+  const cpv=custoDireto;
+  const rob=ok(rol)&&ok(cpv)?rol-cpv:null;
+  const despOp=ok(despAdmCml)?despAdmCml-D(8):null;
+  const despFin=D(8), recFin=0, despFinLiq=despFin-recFin;
+  const lair=[receita,impostos,cpv,despOp].every(ok)?receita-impostos-cpv-despOp-despFinLiq:null;
+  const provisao=ok(lair)?(lair>0?lair*(irpj+csll):0):null;
+  const lucro=ok(lair)&&ok(provisao)?lair-provisao:null;
+  m.dre={receita,impostos,rol,cpv,rob,despOp,despFin,recFin,despFinLiq,lair,provisao,lucro,
+    resumoCusto:[impostos,cpv,despOp,provisao].every(ok)?impostos+cpv+despOp+despFinLiq+provisao:null};
+  m.fpv.lucro=lucro;
+
+  /* Pedido de venda / NF de saída */
+  const qtVenda=ok(QP)?INT(QP*1):null;
+  const puVenda=ok(precoCaixa)?round(precoCaixa,2):null;
+  const linhaVenda=ok(qtVenda)&&ok(puVenda)?qtVenda*puVenda:null;   // J7
+  const totVenda=n(linhaVenda);                                     // J8 = SUM(J7:J7)
+  m.pv={cliente:"SUPER ATACADO LTDA.",prazo:60,qt:qtVenda,pu:puVenda,linha:linhaVenda,total:totVenda,
+        icms:round(totVenda*icms,2),pis:round(totVenda*pis,2),cofins:round(totVenda*cofins,2)};
+
+  /* Kardex completo — saída da caixa de pães = caixas produzidas (correção) */
+  const ke=[];
+  MP.forEach((p,i)=>{
+    const d=nf1[i].qt, e=kdx[i].cu, f=ok(d)&&ok(e)?round(d*e,2):null;
+    const g=ok(pm)?CEIL((conv[i]*pm)/1000):null, iv=ok(g)&&ok(e)?round(g*e,2):null;
+    ke.push({nome:p.nome,un:p.un,d,e,f,g,h:e,i:iv,j:ok(d)&&ok(g)?d-g:null,k:ok(f)&&ok(iv)?f-iv:null});
+  });
+  { const d=nf1[6].qt,e=kdx[6].cu,f=ok(d)&&ok(e)?round(d*e,2):null;
+    const g=opItens[6].qt, iv=ok(g)&&ok(e)?round(g*e,2):null;      // G11 = consumo do saco
+    ke.push({nome:EMB[0].nome,un:"Unidade",d,e,f,g,h:e,i:iv,j:ok(d)&&ok(g)?d-g:null,k:ok(f)&&ok(iv)?f-iv:null}); }
+  { const d=nf1[7].qt,e=kdx[7].cu,f=ok(d)&&ok(e)?round(d*e,2):null;
+    const g=opItens[7].qt, iv=ok(g)&&ok(e)?round(g*e,2):null;      // G12 = OP!E16, já corrigido
+    ke.push({nome:EMB[1].nome,un:"Unidade",d,e,f,g,h:e,i:iv,j:ok(d)&&ok(g)?d-g:null,k:ok(f)&&ok(iv)?f-iv:null}); }
+  { const g=opItens[8].qt,h=opItens[8].cu;
+    ke.push({nome:"Mão de Obra",un:"Hora",d:0,e:0,f:0,g,h,i:ok(g)&&ok(h)?round(g*h,2):null,j:null,k:null}); }
+  m.ke={itens:ke,entradas:SUM(ke,"f"),saidas:SUM(ke,"i"),saldo:SUM(ke,"k")};
+
+  /* Apuração de impostos */
+  const ap=[["ICMS",nf1H,m.pv.icms],["PIS",nf1I,m.pv.pis],["COFINS",nf1J,m.pv.cofins]]
+    .map(([nome,cr,db])=>({nome,cr,db,saldo:db-cr}));
+  m.apuracao={itens:ap,total:{cr:SUM(ap,"cr"),db:SUM(ap,"db"),saldo:SUM(ap,"saldo")}};
+
+  /* Fluxo de caixa */
+  const parcela=m.nf2.total/3;
+  const impPag=m.apuracao.total.saldo>0 ? m.apuracao.total.saldo+D(9) : 0;
+  const mov=[
+    ["31/08/2022","Capital Social",0,S.capitalSocial],
+    ["30/09/2022","Pagto Salários",m.folha.total,0],
+    ["30/09/2022","Pagto.Despesas",m.despesas.total,0],
+    ["30/09/2022","Compra Matéria Prima",m.nf1.total,0],
+    ["02/10/2022","Compra Imobilizado parcela 1",parcela,0],
+    ["15/10/2022","Pagto.Impostos",impPag,0],
+    ["01/11/2022","Faturamento Cliente 1",0,m.pv.total],
+    ["01/11/2022","Compra Imobilizado parcela 2",parcela,0],
+    ["01/12/2022","Compra Imobilizado parcela 3",parcela,0]
+  ];
+  let saldo=0;
+  m.fluxo=mov.map(([dt,ds,pg,rc])=>{ saldo=saldo+n(rc)-n(pg); return {dt,ds,pg,rc,saldo}; });
+
+  /* Alertas — armam depois que o PIS é informado */
+  const armado=pis>0;
+  const A=(ruimSe,bom,ruim)=>!armado?{st:"idle",txt:"—"}:(ruimSe?{st:"bad",txt:ruim}:{st:"ok",txt:bom});
+  m.alertas=[
+    A(qtdeFornos>S.capacidadeLocalFornos,"Ok equipamentos","O local não comporta esta quantidade de fornos!"),
+    A(num(I.aluguel)<S.aluguelMin,"Ok aluguel","Valor do aluguel não foi aceito!"),
+    A(salPad<S.salMinPadeiro,"Ok salário padeiro","Não é possível contratar padeiro com o salário oferecido!"),
+    A(salAdm<S.salMinAdm,"Ok salário auxiliar administrativo","Não é possível contratar aux.adm. com o salário oferecido!"),
+    A(salAss<S.salMinEntregas,"Ok salário entregador","Não é possível contratar assist.entregas com o salário oferecido!"),
+    A(ok(precoPao)&&precoPao>S.precoMax,"Ok preço de vendas","O mercado não vai comprar o produto pois não aceita o preço de vendas"),
+    A(!ok(lucro)||lucro<S.lucroMin,"Ok lucro desejado","Não deu o lucro esperado")
+  ];
+  return m;
+}
+
+/* =====================================================================
+   FORMATAÇÃO
+   ===================================================================== */
+function fmt(v,d=2){ return ok(v)?v.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d}):"—"; }
+const F={
+  n:(v,d=2)=>fmt(v,d),
+  i:v=>ok(v)?v.toLocaleString("pt-BR",{maximumFractionDigits:0}):"—",
+  m:v=>ok(v)?v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"}):"—",
+  p:(v,d=2)=>ok(v)?fmt(v*100,d)+"%":"—"
+};
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+
+/* =====================================================================
+   GRÁFICOS — SVG desenhado à mão, sem biblioteca externa
+   ===================================================================== */
+const PAL={barra:"#0b6b6b",neg:"#a52222",neutro:"#7b8794",bom:"#1c7a45",
+           mp:"#0b6b6b",mod:"#3f8f8f",desp:"#c9ac1f",teto:"#a52222"};
+const semDados=(txt)=>`<div class="vazio">${esc(txt)}</div>`;
+const svgTxt=(x,y,t,cls="lbl",anchor="middle",extra="")=>
+  `<text x="${x}" y="${y}" class="${cls}" text-anchor="${anchor}" ${extra}>${esc(t)}</text>`;
+const curto=v=>{ if(!ok(v))return "—";
+  const a=Math.abs(v);
+  if(a>=1e6) return (v/1e6).toLocaleString("pt-BR",{maximumFractionDigits:1})+" mi";
+  if(a>=1e3) return (v/1e3).toLocaleString("pt-BR",{maximumFractionDigits:1})+" mil";
+  return fmt(v,0); };
+
+/* --- 1. Cascata do DRE ------------------------------------------------ */
+function svgCascata(m){
+  const d=m.dre;
+  if(![d.receita,d.impostos,d.cpv,d.despOp,d.provisao,d.lucro].every(ok) || d.receita===0)
+    return semDados("A cascata aparece quando o preço de venda estiver formado.");
+  const passos=[{l:"Receita",v:d.receita,tot:1},{l:"Impostos",v:-d.impostos},
+    {l:"CPV",v:-d.cpv},{l:"Desp. oper.",v:-d.despOp},{l:"Desp. fin.",v:-d.despFinLiq},
+    {l:"IRPJ+CSLL",v:-d.provisao},{l:"Lucro",v:d.lucro,tot:1}];
+  let acc=0;
+  const b=passos.map(p=>{ if(p.tot){const r={...p,y0:0,y1:p.v}; acc=p.v; return r;}
+    const y0=acc,y1=acc+p.v; acc=y1; return {...p,y0,y1}; });
+  const W=760,H=310,ml=64,mr=12,mt=22,mb=64;
+  const pw=W-ml-mr, ph=H-mt-mb;
+  const vals=b.flatMap(x=>[x.y0,x.y1]).concat([0]);
+  const vmax=Math.max(...vals), vmin=Math.min(...vals);
+  const Y=v=>mt+ph-((v-vmin)/((vmax-vmin)||1))*ph;
+  const passo=pw/b.length, bw=passo*0.56;
+  let out=`<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="Cascata do resultado">`;
+  [0,0.25,0.5,0.75,1].forEach(f=>{const v=vmin+(vmax-vmin)*f,y=Y(v);
+    out+=`<line x1="${ml}" y1="${y}" x2="${W-mr}" y2="${y}" class="axis"/>`+
+         svgTxt(ml-8,y+4,curto(v),"lbl","end");});
+  out+=`<line x1="${ml}" y1="${Y(0)}" x2="${W-mr}" y2="${Y(0)}" class="zero"/>`;
+  b.forEach((p,i)=>{
+    const x=ml+i*passo+(passo-bw)/2;
+    const yA=Y(Math.max(p.y0,p.y1)), yB=Y(Math.min(p.y0,p.y1));
+    const h=Math.max(Math.abs(yB-yA),1.5);
+    const cor=p.tot?(p.v>=0?PAL.barra:PAL.neg):(p.v<0?PAL.neg:PAL.bom);
+    out+=`<rect x="${x}" y="${yA}" width="${bw}" height="${h}" fill="${cor}" opacity="${p.tot?1:.82}" rx="2"/>`;
+    if(i<b.length-1){const xf=x+bw, xt=ml+(i+1)*passo+(passo-bw)/2, yl=Y(p.tot?p.v:p.y1);
+      out+=`<line x1="${xf}" y1="${yl}" x2="${xt}" y2="${yl}" stroke="#b6bec6" stroke-width="1" stroke-dasharray="2 2"/>`;}
+    out+=svgTxt(x+bw/2,yA-6,curto(p.v),"val");
+    out+=svgTxt(x+bw/2,H-mb+18,p.l,"lbl");
+  });
+  return out+`</svg>`;
+}
+
+/* --- 2. Preço por pão contra o teto de mercado ------------------------ */
+function svgTermometro(m){
+  const pp=m.fpv.precoPao, teto=m.S.precoMax;
+  if(!ok(pp)) return semDados("Informe as alíquotas, a margem e a estrutura do produto.");
+  const W=760,H=132,ml=16,mr=16,y=54,h=26;
+  const max=Math.max(pp,teto)*1.18;
+  const X=v=>ml+(v/max)*(W-ml-mr);
+  const passou=pp>teto;
+  let out=`<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="Preço por pão contra o teto de mercado">`;
+  out+=`<rect x="${ml}" y="${y}" width="${X(teto)-ml}" height="${h}" fill="${PAL.bom}" opacity=".13" rx="3"/>`;
+  out+=`<rect x="${X(teto)}" y="${y}" width="${W-mr-X(teto)}" height="${h}" fill="${PAL.neg}" opacity=".10" rx="3"/>`;
+  out+=`<rect x="${ml}" y="${y+7}" width="${Math.max(X(pp)-ml,2)}" height="${h-14}" fill="${passou?PAL.neg:PAL.barra}" rx="2"/>`;
+  out+=`<line x1="${X(teto)}" y1="${y-10}" x2="${X(teto)}" y2="${y+h+10}" stroke="${PAL.teto}" stroke-width="2"/>`;
+  out+=svgTxt(X(teto),y-16,"teto do mercado "+F.m(teto),"val");
+  out+=`<circle cx="${X(pp)}" cy="${y+h/2}" r="6" fill="${passou?PAL.neg:PAL.barra}" stroke="#fff" stroke-width="2"/>`;
+  out+=svgTxt(Math.min(Math.max(X(pp),60),W-70),y+h+26,"seu preço "+F.m(pp),"val");
+  out+=svgTxt(ml,H-6,passou?"Acima do teto — o mercado não compra":"Dentro do teto",
+              "lbl","start",`fill="${passou?PAL.neg:PAL.bom}" font-weight="600"`);
+  return out+`</svg>`;
+}
+
+/* --- 3. Composição do custo ------------------------------------------ */
+function svgCusto(m){
+  const f=m.fpv;
+  if(![f.custoMPEmb,f.custoMOD,f.despAdmCml].every(ok)||!f.custoTotal)
+    return semDados("A composição aparece depois do apontamento da OP e das despesas.");
+  const partes=[["Matéria-prima e embalagem",f.custoMPEmb,PAL.mp],
+                ["Mão de obra direta",f.custoMOD,PAL.mod],
+                ["Despesas adm. e comerciais",f.despAdmCml,PAL.desp]];
+  const tot=f.custoTotal, W=760,H=150,ml=16,mr=16,y=26,h=44;
+  let x=ml, out=`<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="Composição do custo total">`;
+  partes.forEach(([,v,c],i)=>{ const w=(v/tot)*(W-ml-mr);
+    out+=`<rect x="${x}" y="${y}" width="${Math.max(w,0)}" height="${h}" fill="${c}" ${i===0?'rx="3"':''}/>`;
+    if(w>52) out+=svgTxt(x+w/2,y+h/2+5,F.p(v/tot,1),"val",'middle','fill="#fff" font-weight="600"');
+    x+=w; });
+  partes.forEach(([l,v,c],i)=>{ const ly=y+h+30+i*20;
+    out+=`<rect x="${ml}" y="${ly-9}" width="11" height="11" fill="${c}" rx="2"/>`;
+    out+=svgTxt(ml+18,ly,l,"lbl","start");
+    out+=svgTxt(W-mr,ly,F.m(v),"val","end"); });
+  return out+`</svg>`;
+}
+
+/* --- 4. Fluxo de caixa: Pagar, Receber e Saldo ----------------------- */
+function svgCaixa(m){
+  const f=m.fluxo.filter(r=>ok(r.saldo));
+  if(f.length<2) return semDados("O fluxo aparece assim que os pagamentos forem calculados.");
+  const W=760,H=300,ml=64,mr=14,mt=22,mb=86, pw=W-ml-mr, ph=H-mt-mb;
+  const serie=k=>f.map(r=>ok(r[k])?r[k]:0);
+  const pg=serie("pg"), rc=serie("rc"), sd=f.map(r=>r.saldo);
+  const todos=[...pg,...rc,...sd,0];
+  const vmax=Math.max(...todos), vmin=Math.min(...todos);
+  const X=i=>ml+(i/(f.length-1))*pw;
+  const Y=v=>mt+ph-((v-vmin)/((vmax-vmin)||1))*ph;
+  const y0=Y(0);
+  let out=`<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="Fluxo de caixa: pagar, receber e saldo">`;
+  [0,0.25,0.5,0.75,1].forEach(t=>{const v=vmin+(vmax-vmin)*t,y=Y(v);
+    out+=`<line x1="${ml}" y1="${y}" x2="${W-mr}" y2="${y}" class="axis"/>`+svgTxt(ml-8,y+4,curto(v),"lbl","end");});
+  out+=`<line x1="${ml}" y1="${y0}" x2="${W-mr}" y2="${y0}" class="zero"/>`;
+  const linha=(serie,cor,larg,tracejado)=>{
+    const pts=serie.map((v,i)=>`${X(i)},${Y(v)}`).join(" ");
+    return `<polyline points="${pts}" fill="none" stroke="${cor}" stroke-width="${larg}" `+
+           `stroke-linejoin="round" stroke-linecap="round" ${tracejado?`stroke-dasharray="${tracejado}"`:""}/>`;
+  };
+  // ordem: pagar e receber ao fundo, saldo em destaque
+  out+=linha(pg,PAL.neg,1.8,"5 3");
+  out+=linha(rc,PAL.bom,1.8,"5 3");
+  out+=linha(sd,PAL.barra,2.6,null);
+  const mini=sd.reduce((a,v,i)=>v<sd[a]?i:a,0);
+  f.forEach((r,i)=>{
+    if(ok(r.pg)&&r.pg>0) out+=`<circle cx="${X(i)}" cy="${Y(r.pg)}" r="2.6" fill="${PAL.neg}"/>`;
+    if(ok(r.rc)&&r.rc>0) out+=`<circle cx="${X(i)}" cy="${Y(r.rc)}" r="2.6" fill="${PAL.bom}"/>`;
+    out+=`<circle cx="${X(i)}" cy="${Y(r.saldo)}" r="${i===mini?5:3.4}" fill="${r.saldo<0?PAL.neg:PAL.barra}" stroke="#fff" stroke-width="1.6"/>`;
+    if(i%2===0||i===f.length-1) out+=svgTxt(X(i),H-mb+18,r.dt.slice(0,5),"lbl");
+  });
+  out+=svgTxt(X(mini),Y(sd[mini])-12,"saldo mínimo "+curto(sd[mini]),"val");
+  // legenda
+  const ly=H-24; let lx=ml;
+  const item=(cor,txt,traco)=>{ const seg=`<line x1="${lx}" y1="${ly}" x2="${lx+22}" y2="${ly}" stroke="${cor}" stroke-width="2.4" ${traco?`stroke-dasharray="${traco}"`:""}/>`;
+    const t=svgTxt(lx+28,ly+4,txt,"lbl","start"); lx+=28+txt.length*7+22; return seg+t; };
+  out+=item(PAL.neg,"Pagar","5 3");
+  out+=item(PAL.bom,"Receber","5 3");
+  out+=item(PAL.barra,"Saldo",null);
+  return out+`</svg>`;
+}
+
+/* --- progresso de preenchimento -------------------------------------- */
+function progresso(){
+  const alvo=[I.nome,I.email,I.pis,I.cofins,I.irpj,I.csll,
+    I.salPadeiro,I.salAdm,I.salEntregas,I.vt,I.cesta,
+    ...I.conv,I.qtdeFornos,...I.precoMP,I.precoComputador,
+    ...I.depreciacao,I.aluguel,I.margemLucro];
+  const feitos=alvo.filter(v=>!vazio(v)).length;
+  return {feitos,total:alvo.length,pct:feitos/alvo.length};
+}
+
+/* =====================================================================
+   GUIAS
+   ===================================================================== */
+const GUIAS=[
+  {id:"inicio",  grp:"Abertura",   nome:"Gestão à Vista"},
+  {id:"fiscais", grp:"Definições", nome:"Fiscais",              campos:["pis","cofins","irpj","csll","nome","email"]},
+  {id:"salarios",grp:"Definições", nome:"Salários",             campos:["salPadeiro","salAdm","salEntregas","vt","cesta"]},
+  {id:"vendas",  grp:"Definições", nome:"Vendas"},
+  {id:"estr",    grp:"Engenharia", nome:"Estrutura do produto", campos:["conv"]},
+  {id:"equip",   grp:"Engenharia", nome:"Equipamentos",         campos:["qtdeFornos"]},
+  {id:"eng",     grp:"Engenharia", nome:"Eng. de fabricação"},
+  {id:"pc1",     grp:"Compras",    nome:"PC1 · Matéria-prima",  campos:["precoMP"]},
+  {id:"pc2",     grp:"Compras",    nome:"PC2 · Equipamentos",   campos:["precoComputador"]},
+  {id:"nf1",     grp:"Compras",    nome:"NF1 · Matéria-prima"},
+  {id:"nf2",     grp:"Compras",    nome:"NF2 · Equipamentos"},
+  {id:"kardex",  grp:"Estoque",    nome:"Kardex de entradas"},
+  {id:"op",      grp:"Produção",   nome:"OP e apontamento"},
+  {id:"imob",    grp:"Contábil",   nome:"Imobilizado",          campos:["depreciacao"]},
+  {id:"folha",   grp:"Contábil",   nome:"Folha de pagamento"},
+  {id:"desp",    grp:"Contábil",   nome:"Despesas",             campos:["aluguel"]},
+  {id:"fpv",     grp:"Resultado",  nome:"Formação de preço",    campos:["margemLucro"]},
+  {id:"dre",     grp:"Resultado",  nome:"DRE"},
+  {id:"pv",      grp:"Resultado",  nome:"Pedido de venda"},
+  {id:"ke",      grp:"Fechamento", nome:"Kardex completo"},
+  {id:"apur",    grp:"Fechamento", nome:"Apuração de impostos"},
+  {id:"fluxo",   grp:"Fechamento", nome:"Fluxo de caixa"},
+  {id:"alertas", grp:"Fechamento", nome:"Alertas do case"},
+  {id:"setup",   grp:"Instrutor",  nome:"Setup do jogo", lock:true}
+];
+let atual="inicio", senhaErro="";
+
+/* --- campos de entrada --------------------------------------------- */
+/* tipo: num | moeda | pct | texto — todos aceitam vírgula decimal      */
+function cel(campo,{idx=null,tipo="num",ph=""}={}){
+  const val = idx===null?I[campo]:I[campo][idx];
+  const cls = tipo==="texto" ? "cell" : "cell num";
+  const inp = `<input class="${cls}" type="text" inputmode="${tipo==="texto"?"text":"decimal"}"
+    data-campo="${campo}" data-tipo="${tipo}" ${idx!==null?`data-idx="${idx}"`:""}
+    placeholder="${esc(ph)}" value="${esc(val)}">`;
+  if(tipo==="pct")   return `<div class="io">${inp}<span class="un">%</span></div>`;
+  if(tipo==="moeda") return `<div class="io"><span class="un">R$</span>${inp}</div>`;
+  return inp;
+}
+function sel(campo,opcoes,placeholder){
+  return `<select class="cell" data-campo="${campo}">`+
+    (placeholder?`<option value="" ${vazio(I[campo])?"selected":""}>${esc(placeholder)}</option>`:"")+
+    opcoes.map(o=>{const [v,l]=Array.isArray(o)?o:[o,o];
+      return `<option value="${esc(v)}" ${String(I[campo])===String(v)?"selected":""}>${esc(l)}</option>`;}).join("")+
+    `</select>`;
+}
+const ro=v=>`<input readonly class="num" value="${esc(v)}">`;
+function celSetup(k,tipo){
+  const inp=`<input class="cell num" type="text" inputmode="decimal" data-setup="${k}" data-tipo="${tipo}" value="${esc(setupValor(k))}">`;
+  if(tipo==="pct")   return `<div class="io">${inp}<span class="un">%</span></div>`;
+  if(tipo==="moeda") return `<div class="io"><span class="un">R$</span>${inp}</div>`;
+  return inp;
+}
+
+/* =====================================================================
+   RENDER
+   ===================================================================== */
+let renderizando=false;
+function render(){
+  renderizando=true;                       // o blur dos campos removidos do DOM é ignorado
+  const m=calc();
+  renderNav(m);
+  document.getElementById("main").innerHTML=`<div class="sheet">${V[atual](m)}</div>`;
+  bind();
+  renderizando=false;
+}
+function renderNav(){
+  let html="",grp="";
+  GUIAS.forEach(g=>{
+    if(g.grp!==grp){grp=g.grp; html+=`<div class="grp">${grp}</div>`;}
+    let dot=`<span class="dot none"></span>`;
+    if(g.lock) dot=`<span class="dot ${setupLiberado?"done":"none"}"></span>`;
+    else if(g.campos){
+      const chk=c=>Array.isArray(I[c])?I[c].map(v=>!vazio(v)):[!vazio(I[c])];
+      const flags=g.campos.flatMap(chk);
+      dot=`<span class="dot ${flags.every(Boolean)?"done":flags.some(Boolean)?"fill":""}"></span>`;
+    }
+    html+=`<a data-guia="${g.id}" class="${atual===g.id?"on":""}${g.lock?" lock":""}">${dot}${esc(g.nome)}${g.lock&&!setupLiberado?" 🔒":""}</a>`;
+  });
+  document.getElementById("nav").innerHTML=html;
+}
+const head=(t,l)=>`<h2>${t}</h2><p class="lead">${l}</p>`;
+const V={};
+
+function alertasHTML(m){
+  return m.alertas.map(a=>{
+    const simbolo = a.st==="ok" ? "✔" : a.st==="bad" ? "!" : "";
+    return `<div class="alert ${a.st}">
+      <span class="sig" aria-hidden="true"><span>${simbolo}</span></span>
+      <span class="txt">${esc(a.txt)}</span></div>`;
+  }).join("");
+}
+
+/* --------------------------------- Abertura */
+V.inicio=m=>{
+  const pg=progresso();
+  const pp=m.fpv.precoPao, lu=m.dre.lucro;
+  const cor=(v,bom)=>!ok(v)?"":(bom?"pos":"neg");
+  const saldoFim=m.fluxo[m.fluxo.length-1].saldo;
+  const minCaixa=Math.min(...m.fluxo.filter(r=>ok(r.saldo)).map(r=>r.saldo));
+  return head("Gestão à Vista","Sua Panificadora em uma única tela. Cada decisão tomada nas guias reaparece aqui, na hora.")+`
+
+<div class="card"><h3>Progresso do preenchimento</h3>
+<div class="prog"><i style="width:${(pg.pct*100).toFixed(1)}%"></i></div>
+<p class="foot" style="margin-top:2px">${pg.feitos} de ${pg.total} campos preenchidos. Nada é gravado sozinho — use <strong>Salvar respostas</strong> antes de fechar.</p></div>
+
+<div class="kpi" style="margin-bottom:18px">
+<div><div class="lbl">Preço por pão</div>
+  <div class="val num ${ok(pp)?cor(pp,pp<=m.S.precoMax):""}">${F.m(pp)}</div>
+  <div class="foot" style="margin:0">teto ${F.m(m.S.precoMax)}</div></div>
+<div><div class="lbl">Lucro do exercício</div>
+  <div class="val num ${ok(lu)?cor(lu,lu>=m.S.lucroMin):""}">${F.m(lu)}</div>
+  <div class="foot" style="margin:0">meta ${F.m(m.S.lucroMin)}</div></div>
+<div><div class="lbl">Caixas por mês</div>
+  <div class="val num">${F.i(m.eng.caixasMes)}</div>
+  <div class="foot" style="margin:0">${F.i(m.eng.paesMes)} pães</div></div>
+<div><div class="lbl">Saldo final de caixa</div>
+  <div class="val num ${ok(saldoFim)?cor(saldoFim,saldoFim>=0):""}">${F.m(saldoFim)}</div>
+  <div class="foot" style="margin:0">mínimo ${F.m(isFinite(minCaixa)?minCaixa:NaN)}</div></div>
+</div>
+
+<div class="card"><h3>Semáforo do case</h3>
+${m.alertas.every(a=>a.st==="idle")?`<p class="foot" style="margin:0 0 12px">Informe a alíquota de PIS na guia <strong>Fiscais</strong> para armar as validações.</p>`:""}
+<div class="alerts">${alertasHTML(m)}</div></div>
+
+<div class="painel">
+  <div class="card"><h3>Preço contra o teto do mercado</h3>${svgTermometro(m)}</div>
+  <div class="card"><h3>Composição do custo total</h3>${svgCusto(m)}</div>
+</div>
+<div class="card"><h3>Resultado do exercício</h3>${svgCascata(m)}</div>
+<div class="card"><h3>Saldo de caixa acumulado</h3>${svgCaixa(m)}
+<p class="foot">O vale entre pagar os fornecedores e receber do cliente em 60 dias é o seu capital de giro.</p></div>
+
+<div class="card"><h3>Como preencher</h3>
+<p style="margin:0 0 10px">Os campos <span style="background:var(--input);border:1px solid var(--input-line);padding:1px 7px;border-radius:3px">em amarelo</span> são seus. O resto se recalcula sozinho.</p>
+<p style="margin:0 0 10px">Use <strong>vírgula</strong> como separador decimal: <code>1.748,80</code>.</p>
+</div>
+
+<div class="card"><h3>Objetivo do Exercício</h3><table>
+<tr><th style="width:290px">Regime de tributação</th><td>${esc(I.regime)}</td></tr>
+<tr><th>Capital social</th><td class="num">${F.m(m.S.capitalSocial)}</td></tr>
+<tr><th>Produto</th><td>Caixa com ${F.i(m.S.paesPorCaixa)} pães de forma de 450 g</td></tr>
+<tr><th>Cliente</th><td>SUPER ATACADO LTDA. — leva 100% da produção, paga em 60 dias</td></tr>
+<tr><th>Preço máximo que o mercado aceita</th><td class="num">${F.m(m.S.precoMax)} por pão</td></tr>
+<tr><th>Lucro mínimo desejado</th><td class="num">${F.m(m.S.lucroMin)}</td></tr>
+</table></div>`;
+};
+
+/* --------------------------------- Fiscais */
+V.fiscais=m=>head("Definições fiscais","Informe as alíquotas do Lucro Real.")+`
+<div class="card"><h3>Regime</h3><div class="fields">
+<label>Regime de tributação</label><div>${sel("regime",REGIMES)}</div>
+<label>Capital social</label><div>${ro(F.m(m.S.capitalSocial))}</div>
+<label>ICMS</label><div>${ro(F.p(m.S.icms))}</div>
+</div></div>
+${I.regime==="Lucro Presumido"?`<div class="notice"><strong>Atenção:</strong> no Lucro Presumido o PIS e a COFINS são cumulativos — as compras <em>não</em> geram crédito, e o IRPJ/CSLL incidem sobre uma base presumida, não sobre o lucro apurado. O motor do case continua calculando pelo regime não cumulativo do Lucro Real, como na planilha original. A escolha fica registrada no arquivo de respostas.</div>`:""}
+<div class="card"><h3>Alíquotas</h3><div class="fields">
+<label>PIS</label><div>${cel("pis",{tipo:"pct",ph:"0,00"})}</div>
+<label>COFINS</label><div>${cel("cofins",{tipo:"pct",ph:"0,00"})}</div>
+<label>IRPJ</label><div>${cel("irpj",{tipo:"pct",ph:"0,00"})}</div>
+<label>CSLL</label><div>${cel("csll",{tipo:"pct",ph:"0,00"})}</div>
+<label>Alíquota total sobre a venda</label><div>${ro(F.p(m.fpv.aliq))}</div>
+</div></div>
+<div class="card"><h3>Identificação</h3><div class="fields">
+<label>Nome completo</label><div>${cel("nome",{tipo:"texto"})}</div>
+<label>E-mail</label><div>${cel("email",{tipo:"texto"})}</div>
+</div><p class="foot">Usados para nomear o arquivo de respostas.</p></div>`;
+
+/* --------------------------------- Salários */
+V.salarios=m=>head("Definição de salários","")+`
+<div class="card"><h3>Remuneração</h3><div class="fields">
+<div class="hint">Valores em reais, com duas casas.</div>
+<label>Salário bruto do padeiro</label><div>${cel("salPadeiro",{tipo:"moeda",ph:"0,00"})}</div>
+<label>Salário bruto do auxiliar administrativo</label><div>${cel("salAdm",{tipo:"moeda",ph:"0,00"})}</div>
+<label>Salário bruto do assistente de entregas</label><div>${cel("salEntregas",{tipo:"moeda",ph:"0,00"})}</div>
+<label>Pagar vale transporte?</label><div>${sel("vt",[SIM,NAO],"Selecione")}</div>
+<label>Benefício de cesta básica?</label><div>${sel("cesta",[SIM,NAO],"Selecione")}</div>
+</div></div>
+${I.vt===NAO?`<div class="card"><h3>Se responder 'Não' em vale transporte, informe o motivo</h3>
+<div class="fields">
+<label>Motivo <span style="color:var(--bad)">*</span></label><div>${cel("motivoVT",{tipo:"texto",ph:"Obrigatório"})}</div>
+</div>${vazio(I.motivoVT)?`<p class="foot" style="color:var(--bad);margin-top:6px">Campo obrigatório quando o vale transporte não é pago.</p>`:""}</div>`:""}
+`;
+
+/* --------------------------------- Vendas */
+V.vendas=m=>head("Definições de vendas","O horário de funcionamento decide se há produção no sábado")+`
+<div class="card"><h3>Operação</h3><div class="fields">
+<label>Horário de funcionamento</label><div>${sel("horario",HORARIOS)}</div>
+</div></div>
+<div class="card"><h3>Carteira de clientes</h3>
+<table><thead><tr><th>Cliente</th><th class="r">% de compra</th><th class="r">Prazo de pagamento</th></tr></thead>
+<tbody><tr><td>SUPER ATACADO LTDA.</td><td class="r num">100,00%</td><td class="r num">60 dias</td></tr></tbody></table></div>
+<div class="card"><h3>Preço e lucro</h3><div class="fields">
+<label>Preço máximo de vendas (por pão)</label><div>${ro(F.m(m.S.precoMax))}</div>
+<label>Lucro mínimo desejado</label><div>${ro(F.m(m.S.lucroMin))}</div>
+</div></div>`;
+
+/* --------------------------------- Estrutura do produto */
+V.estr=m=>head("Estrutura do produto","A receita original rende um pão de 600 g. Converta cada ingrediente para o pão de 450 g — regra de três resolve.")+`
+<div class="card"><h3>Pão de forma</h3>
+<table><thead><tr><th>Ingrediente</th><th class="r">Pão de 600 g</th><th class="r">Pão de 450 g</th>
+<th class="r">Consumo p/ ${F.i(m.S.paesPorCaixa)} pães (g)</th><th>Unidade de estoque</th><th class="r">Em quilos/litros</th></tr></thead><tbody>
+${MP.map((p,i)=>`<tr><td>${esc(p.nome)}</td><td class="r num">${F.n(p.g600)}</td>
+<td>${cel("conv",{idx:i,ph:"0,00"})}</td>
+<td class="r num">${F.n(m.estr.mp[i].e)}</td><td>${esc(p.un)}</td><td class="r num">${F.n(m.estr.mp[i].g,4)}</td></tr>`).join("")}
+<tr class="total"><td>Peso total (g)</td><td class="r num">${F.n(m.estr.peso600)}</td>
+<td class="r num">${F.n(m.estr.peso450)}</td><td class="r num">${F.n(m.estr.consumo5)}</td><td colspan="2"></td></tr>
+${EMB.map((p,i)=>`<tr><td>${esc(p.nome)}</td><td class="r num">${F.n(p.qt600)}</td>
+<td class="r num">${F.n(p.qt600)}</td><td class="r num">${F.n(m.estr.emb[i].e)}</td>
+<td>${esc(p.un)}</td><td class="r num">${F.n(m.estr.emb[i].g)}</td></tr>`).join("")}
+<tr><td>Hora de trabalho do padeiro (média em min)</td><td class="r">—</td>
+<td class="r num">${F.n(m.estr.modPorPao,4)}</td><td class="r num">${F.n(m.estr.modPorCaixa,4)}</td>
+<td>Hora</td><td class="r num">${F.n(m.estr.modPorCaixa,4)}</td></tr>
+</tbody></table>
+<p class="foot">Consumo = conversão × ${F.i(m.S.paesPorCaixa)} pães por caixa. ${
+ m.estr.peso450===450?"✔ O peso convertido fecha em 450 g."
+ :`Peso convertido: ${F.n(m.estr.peso450)} g — o alvo é 450,00 g.`}</p></div>`;
+
+/* --------------------------------- Equipamentos */
+V.equip=m=>head("Equipamentos","Três fornos, três capacidades, três preços. O preço do forno escolhido vai direto para o pedido de compra.")+`
+<div class="card"><h3>Opções de forno</h3>
+<table><thead><tr><th>Opção</th><th class="r">Preço</th><th class="r">Pães por fornada</th><th class="r">Preço por pão/fornada</th></tr></thead><tbody>
+${[0,1,2].map(i=>`<tr${I.opcaoForno===i+1?' style="background:var(--accent-soft)"':""}>
+<td>Opção ${i+1}${I.opcaoForno===i+1?' <span class="pill">escolhida</span>':""}</td>
+<td class="r num">${F.m(m.S.precoForno[i])}</td><td class="r num">${F.n(m.S.capForno[i])}</td>
+<td class="r num">${F.m(m.S.capForno[i]?m.S.precoForno[i]/m.S.capForno[i]:NaN)}</td></tr>`).join("")}
+</tbody></table></div>
+<div class="card"><h3>Decisão</h3><div class="fields">
+<label>Opção escolhida</label><div>${sel("opcaoForno",[[1,"Opção 1"],[2,"Opção 2"],[3,"Opção 3"]])}</div>
+<label>Quantidade a comprar</label><div>${cel("qtdeFornos",{ph:"0,00"})}</div>
+<label>Capacidade total por fornada</label><div>${ro(F.n(m.eng.capFornos)+" pães")}</div>
+<label>Preço unitário do forno escolhido</label><div>${ro(F.m(m.pc2.precoForno))}</div>
+</div></div>`;
+
+/* --------------------------------- Engenharia */
+V.eng=m=>head("Engenharia de fabricação","O tempo de processo define quantas fornadas cabem no dia. As produtividades multiplicam o resultado.")+`
+<div class="card"><h3>Processo — 2 masseiras, 200 quilos</h3>
+<table><thead><tr><th>Etapa</th><th class="r">Minutos</th></tr></thead><tbody>
+${m.S.processo.map(p=>`<tr><td>${esc(p[0])}</td><td class="r num">${F.i(p[1])}</td></tr>`).join("")}
+<tr class="total"><td>Tempo total</td><td class="r num">${F.i(m.eng.tempoMin)} min · ${F.n(m.eng.tempoHr,1)} h</td></tr>
+</tbody></table></div>
+<div class="card"><h3>Capacidade</h3><table><tbody>
+<tr><th style="width:340px">Opção de volume de trabalho</th><td class="r num">${F.i(m.eng.opVol)}</td></tr>
+<tr><th>Horas disponíveis na semana</th><td class="r num">${F.n(m.eng.horasSemana)}</td></tr>
+<tr><th>Horas disponíveis no sábado</th><td class="r num">${F.n(m.eng.horasSabado)}</td></tr>
+<tr><th>Masseiras disponíveis</th><td class="r num">${F.i(m.eng.masseiras)}</td></tr>
+<tr><th>Fornadas por dia da semana</th><td class="r num">${F.i(m.eng.fornDia)}</td></tr>
+<tr><th>Fornadas no sábado</th><td class="r num">${F.i(m.eng.fornSab)}</td></tr>
+<tr><th>Capacidade dos fornos</th><td class="r num">${F.n(m.eng.capFornos)}</td></tr>
+<tr><th>Média de dias no mês</th><td class="r num">${F.i(m.eng.diasMes)}</td></tr>
+</tbody></table></div>
+<div class="kpi">
+<div><div class="lbl">Pães por mês</div><div class="val num">${F.n(m.eng.paesMes)}</div></div>
+<div><div class="lbl">Pães por caixa</div><div class="val num">${F.i(m.eng.cx)}</div></div>
+<div><div class="lbl">Caixas por mês</div><div class="val num">${F.i(m.eng.caixasMes)}</div></div>
+</div>`;
+
+/* --------------------------------- PC1 */
+V.pc1=m=>head("Pedido de compras 1 · Matéria-prima","Pesquise o preço de mercado de cada item. O preço unitário de compra deduz a margem do varejo — como se comprássemos direto do produtor.")+`
+<div class="card"><h3>CASA DO PADEIRO LTDA. <span class="pill">Pagto. 28 dias</span> <span class="pill">Frete ${F.p(m.S.fretePC1)}</span></h3>
+<table><thead><tr><th>Item</th><th>Produto</th><th>Un.</th><th class="r">Qtde.</th>
+<th class="r">Preço unit. R$</th><th class="r">Total R$</th><th class="r">Pesquisa de preço R$</th><th>Link</th></tr></thead><tbody>
+${m.pc1.itens.map((r,i)=>`<tr><td class="num">${String(i+1).padStart(2,"0")}</td><td>${esc(r.nome)}</td><td>${esc(r.un)}</td>
+<td class="r num">${F.n(r.qt)}</td><td class="r num">${F.n(r.pu)}</td><td class="r num">${F.n(r.total)}</td>
+<td class="r">${r.fixo?`<span class="num">${F.n(r.pesq,4)}</span>`:cel("precoMP",{idx:i,tipo:"moeda",ph:"0,00"})}</td>
+<td>${r.fixo?"—":cel("linkMP",{idx:i,tipo:"texto",ph:"https://"})}</td></tr>`).join("")}
+<tr class="total"><td colspan="5">Total do pedido</td><td class="r num">${F.n(m.pc1.total)}</td><td colspan="2"></td></tr>
+</tbody></table>
+</div>`;
+
+/* --------------------------------- PC2 */
+V.pc2=m=>head("Pedido de compras 2 · Equipamentos","As quantidades de masseiras e fornos saem das suas escolhas de engenharia. Só o computador depende de você.")+`
+<div class="card"><h3>EQUIP.P/PANIF.PAN LTDA. <span class="pill">Pagto. 30/60/90 dias</span> <span class="pill">Frete ${F.p(m.S.fretePC2)}</span></h3>
+<table><thead><tr><th>Item</th><th>Produto</th><th>Un.</th><th class="r">Qtde.</th>
+<th class="r">Preço unit. R$</th><th class="r">Total R$</th></tr></thead><tbody>
+${m.pc2.itens.map((r,i)=>`<tr><td class="num">${String(i+1).padStart(2,"0")}</td><td>${esc(r.nome)}</td><td>${esc(r.un)}</td>
+<td class="r num">${F.n(r.qt)}</td>
+<td class="r">${i===10?cel("precoComputador",{tipo:"moeda",ph:"0,00"}):`<span class="num">${F.n(r.pu)}</span>`}</td>
+<td class="r num">${F.n(r.total)}</td></tr>`).join("")}
+<tr class="total"><td colspan="5">Total do pedido</td><td class="r num">${F.n(m.pc2.total)}</td></tr>
+</tbody></table></div>`;
+
+/* --------------------------------- NF1 */
+V.nf1=m=>head("Nota fiscal 1 · Matéria-prima","Entrada da mercadoria. O frete entra na base de cálculo do imposto")+`
+<div class="card"><table><thead><tr><th>Item</th><th>Produto</th><th>Un.</th><th class="r">Qtde.</th>
+<th class="r">Preço unit.</th><th class="r">Preço total</th><th class="r">Vr. ICMS</th><th class="r">Vr. PIS</th><th class="r">Vr. COFINS</th></tr></thead><tbody>
+${m.nf1.itens.map((r,i)=>`<tr><td class="num">${String(i+1).padStart(2,"0")}</td><td>${esc(r.nome)}</td><td>${esc(r.un)}</td>
+<td class="r num">${F.n(r.qt)}</td><td class="r num">${F.n(r.pu)}</td><td class="r num">${F.n(r.total)}</td>
+<td class="r num">${F.n(r.icms)}</td><td class="r num">${F.n(r.pis)}</td><td class="r num">${F.n(r.cofins)}</td></tr>`).join("")}
+<tr class="total"><td colspan="5">Total mercadorias</td><td class="r num">${F.n(m.nf1.merc)}</td>
+<td class="r num">${F.n(m.nf1.icms)}</td><td class="r num">${F.n(m.nf1.pis)}</td><td class="r num">${F.n(m.nf1.cofins)}</td></tr>
+<tr class="total"><td colspan="5">Frete (${F.p(m.S.fretePC1)})</td><td class="r num">${F.n(m.nf1.frete)}</td>
+<td colspan="2">Total da nota fiscal</td><td class="r num" colspan="2">${F.n(m.nf1.total)}</td></tr>
+</tbody></table></div>`;
+
+/* --------------------------------- NF2 */
+V.nf2=m=>head("Nota fiscal 2 · Equipamentos","Entrada do imobilizado. O crédito de ICMS de bens de produção (CIAP) fica de fora por decisão didática.")+`
+<div class="card"><table><thead><tr><th>Item</th><th>Produto</th><th>Un.</th><th class="r">Qtde.</th>
+<th class="r">Preço unit.</th><th class="r">Total R$</th><th class="r">Vr. ICMS</th><th class="r">Vr. PIS</th><th class="r">Vr. COFINS</th></tr></thead><tbody>
+${m.nf2.itens.map((r,i)=>`<tr><td class="num">${String(i+1).padStart(2,"0")}</td><td>${esc(r.nome)}</td><td>${esc(r.un)}</td>
+<td class="r num">${F.n(r.qt)}</td><td class="r num">${F.n(r.pu)}</td><td class="r num">${F.n(r.total)}</td>
+<td class="r num">${F.n(r.icms)}</td><td class="r num">${F.n(r.pis)}</td><td class="r num">${F.n(r.cofins)}</td></tr>`).join("")}
+<tr class="total"><td colspan="5">Total mercadorias</td><td class="r num">${F.n(m.nf2.merc)}</td>
+<td class="r num">${F.n(m.nf2.icms)}</td><td class="r num">${F.n(m.nf2.pis)}</td><td class="r num">${F.n(m.nf2.cofins)}</td></tr>
+<tr class="total"><td colspan="5">Frete (${F.p(m.S.fretePC1)})</td><td class="r num">${F.n(m.nf2.frete)}</td>
+<td colspan="2">Total da nota fiscal</td><td class="r num" colspan="2">${F.n(m.nf2.total)}</td></tr>
+</tbody></table>
+</div>`;
+
+/* --------------------------------- Kardex entradas */
+V.kardex=m=>head("Kardex após entradas","Preço é o que se paga. Custo é o que fica: preço menos créditos de impostos, mais valores acessórios, menos descontos.")+`
+<div class="card"><table><thead><tr><th>Item</th><th>Produto</th><th>Un.</th><th class="r">Quantidade</th>
+<th class="r">Custo unitário R$</th><th class="r">Total R$</th></tr></thead><tbody>
+${m.kardex.itens.map((r,i)=>`<tr><td class="num">${String(i+1).padStart(2,"0")}</td><td>${esc(r.nome)}</td><td>${esc(r.un)}</td>
+<td class="r num">${F.n(r.qt)}</td><td class="r num">${F.n(r.cu,4)}</td><td class="r num">${F.n(r.total)}</td></tr>`).join("")}
+<tr class="total"><td colspan="5">Total</td><td class="r num">${F.n(m.kardex.total)}</td></tr>
+</tbody></table>
+</div>
+<div class="card"><h3>Conceitos</h3><table>
+<tr><th style="width:120px">Preço</th><td>Valor pago pela aquisição de qualquer produto ou serviço.</td></tr>
+<tr><th>Custo</th><td>Custo de entrada = Preço − Créditos de impostos + Valores acessórios − Descontos.</td></tr></table></div>`;
+
+/* --------------------------------- OP */
+V.op=m=>head("Ordem de produção e apontamento","A OP consome o estoque pelo custo do Kardex e agrega a mão de obra direta. A quantidade sai de Eng. Fabricação.")+`
+
+<div class="card"><h3>Abertura da OP</h3>
+<table><thead><tr><th>OP</th><th>Produto</th><th class="r">Quantidade (caixas)</th></tr></thead>
+<tbody><tr><td class="num">${m.op.op}</td><td>${esc(m.op.produto)}</td><td class="r num">${F.n(m.op.qtde)}</td></tr></tbody></table></div>
+<div class="card"><h3>Apontamento e custo</h3>
+<table><thead><tr><th>Item</th><th>Produto</th><th>Un.</th><th class="r">Quantidade</th>
+<th class="r">Custo unit. R$</th><th class="r">Total R$</th></tr></thead><tbody>
+${m.op.itens.map((r,i)=>`<tr><td class="num">${String(i+1).padStart(2,"0")}</td><td>${esc(r.nome)}</td><td>${esc(r.un)}</td>
+<td class="r num">${F.n(r.qt)}</td><td class="r num">${F.n(r.cu,4)}</td><td class="r num">${F.n(r.total)}</td></tr>`).join("")}
+<tr class="total"><td colspan="5">Custo total da OP</td><td class="r num">${F.n(m.op.total)}</td></tr>
+</tbody></table></div>`;
+
+/* --------------------------------- Imobilizado */
+V.imob=m=>head("Controle de imobilizado","Informe a taxa de depreciação anual de cada grupo de bens, em percentual. A depreciação mensal entra no custo do produto e nas despesas.")+`
+<div class="card"><table><thead><tr><th>Item</th><th>Produto</th><th class="r">Taxa de depreciação ao ano</th>
+<th class="r">Custo de aquisição R$</th><th class="r">Depreciação ao mês R$</th><th>C. Custo</th></tr></thead><tbody>
+${m.imob.itens.map((r,i)=>`<tr><td class="num">${String(i+1).padStart(2,"0")}</td><td>${esc(r.nome)}</td>
+<td class="r">${cel("depreciacao",{idx:i,tipo:"pct",ph:"0,00"})}</td>
+<td class="r num">${F.n(r.custo)}</td><td class="r num">${F.n(r.dep)}</td><td>${esc(r.cc)}</td></tr>`).join("")}
+<tr class="total"><td colspan="3">Total</td><td class="r num">${F.n(m.imob.custo)}</td><td class="r num">${F.n(m.imob.dep)}</td><td></td></tr>
+</tbody></table>
+<p class="foot">Custo de aquisição = valor da NF2 mais o rateio do frete. Depreciação ao mês = custo × taxa ÷ 12.</p></div>`;
+
+/* --------------------------------- Folha */
+V.folha=m=>head("Folha de pagamento","")+`
+<div class="card"><h3>Parâmetros</h3><table><tbody>
+<tr><th style="width:340px">Vr. Vale transporte por pessoa</th><td class="r num">${F.n(m.folha.param.vt)}</td></tr>
+<tr><th>Vr. Cesta básica</th><td class="r num">${F.n(m.folha.param.cesta)}</td></tr>
+<tr><th>Encargos</th><td class="r num">${F.p(m.folha.param.encargos)}</td></tr>
+</tbody></table></div>
+<div class="card"><h3>Custo de pessoal</h3>
+<table><thead><tr><th>Item</th><th class="r">Valores</th><th class="r">Encargos</th>
+<th class="r">Vl. transp.</th><th class="r">C. básica</th><th class="r">Total R$</th><th>C. Custo</th></tr></thead><tbody>
+${m.folha.linhas.map(r=>`<tr><td>${esc(r.nome)}</td><td class="r num">${F.n(r.sal)}</td><td class="r num">${F.n(r.enc)}</td>
+<td class="r num">${F.n(r.vt)}</td><td class="r num">${F.n(r.cb)}</td><td class="r num">${F.n(r.total)}</td><td>${esc(r.cc)}</td></tr>`).join("")}
+<tr class="total"><td>Custo total de pessoal</td>
+<td class="r num">${F.n(SUM(m.folha.linhas,"sal"))}</td><td class="r num">${F.n(SUM(m.folha.linhas,"enc"))}</td>
+<td class="r num">${F.n(SUM(m.folha.linhas,"vt"))}</td><td class="r num">${F.n(SUM(m.folha.linhas,"cb"))}</td>
+<td class="r num">${F.n(m.folha.total)}</td><td></td></tr>
+</tbody></table></div>`;
+
+/* --------------------------------- Despesas */
+V.desp=m=>head("Pagamento de despesas","Energia, água, gás e combustível variam com o volume produzido. O aluguel é sua decisão.")+`
+<div class="card"><table><thead><tr><th>Despesa / custo</th><th>C. Custo</th><th class="r">Valor R$</th></tr></thead><tbody>
+${m.despesas.itens.map((d,i)=>`<tr><td>${esc(d.nome)}</td><td>${esc(d.cc)}</td>
+<td class="r">${i===0?cel("aluguel",{tipo:"moeda",ph:"0,00"}):`<span class="num">${F.n(d.v)}</span>`}</td></tr>`).join("")}
+<tr class="total"><td colspan="2">Total</td><td class="r num">${F.n(m.despesas.total)}</td></tr>
+</tbody></table>
+</div>`;
+
+/* --------------------------------- Formação de preço */
+V.fpv=m=>head("Formação do preço de vendas","O markup transforma custo em preço. Escolha a margem de lucro desejada e veja se o mercado aceita o resultado.")+`
+<div class="card"><h3>Composição do custo</h3><table><tbody>
+<tr><th style="width:400px">+ Custo das matérias-primas + embalagens</th><td class="r num">${F.n(m.fpv.custoMPEmb)}</td></tr>
+<tr><th>+ Custo da mão de obra direta</th><td class="r num">${F.n(m.fpv.custoMOD)}</td></tr>
+<tr class="total"><td>= Custo direto total</td><td class="r num">${F.n(m.fpv.custoDireto)}</td></tr>
+<tr><th>+ Despesas administrativas e comerciais</th><td class="r num">${F.n(m.fpv.despAdmCml)}</td></tr>
+<tr class="total"><td>= Custo total</td><td class="r num">${F.n(m.fpv.custoTotal)}</td></tr>
+</tbody></table></div>
+<div class="card"><h3>Markup</h3><div class="fields">
+<label>Alíquota ICMS + PIS + COFINS</label><div>${ro(F.p(m.fpv.aliq))}</div>
+<label>% Encargos financeiros</label><div>${ro(F.p(m.fpv.encFin))}</div>
+<label>% Margem de lucro desejada</label><div>${cel("margemLucro",{tipo:"pct",ph:"0,00"})}</div>
+<label>Markup</label><div>${ro(F.n(m.fpv.markup,4))}</div>
+</div><p class="foot">Markup = 1 ÷ (1 − alíquota − encargos financeiros − margem).</p></div>
+
+<div class="card"><h3>Resultado</h3><table><tbody>
+<tr><th style="width:400px">Preço de venda por caixa</th><td class="r num">${F.n(m.fpv.precoCaixa)}</td></tr>
+<tr><th>Preço de venda por unidade de pão</th><td class="r num">${F.n(m.fpv.precoPao)}</td></tr>
+<tr><th>Preço máximo que o mercado paga</th><td class="r num">${F.n(m.S.precoMax)}</td></tr>
+<tr class="total"><td>= Lucro do exercício</td><td class="r num" style="color:${ok(m.fpv.lucro)&&m.fpv.lucro>=m.S.lucroMin?"var(--ok)":"var(--bad)"}">${F.n(m.fpv.lucro)}</td></tr>
+</tbody></table>
+<p class="foot">Preço por caixa = custo total × markup ÷ caixas por mês. Preço por pão = preço da caixa ÷ ${F.i(m.S.paesPorCaixa)}.</p></div>`;
+
+/* --------------------------------- DRE */
+V.dre=m=>head("Demonstração do resultado do exercício","Previsto, com base em um mês de produção vendido integralmente ao SUPER ATACADO.")+`
+<div class="card"><table><tbody>
+<tr class="total"><td style="width:400px">Receita bruta</td><td class="r num">${F.n(m.dre.receita)}</td></tr>
+<tr><td style="padding-left:24px">Receita venda de produtos</td><td class="r num">${F.n(m.dre.receita)}</td></tr>
+<tr><td>(−) Deduções da receita</td><td class="r num">${F.n(m.dre.impostos)}</td></tr>
+<tr><td style="padding-left:24px">Impostos</td><td class="r num">${F.n(m.dre.impostos)}</td></tr>
+<tr class="total"><td>= Receita operacional líquida</td><td class="r num">${F.n(m.dre.rol)}</td></tr>
+<tr><td>(−) Custo das vendas</td><td class="r num">${F.n(m.dre.cpv)}</td></tr>
+<tr><td style="padding-left:24px">Custo do produto vendido (CPV)</td><td class="r num">${F.n(m.dre.cpv)}</td></tr>
+<tr class="total"><td>= Resultado operacional bruto</td><td class="r num">${F.n(m.dre.rob)}</td></tr>
+<tr><td>(−) Despesas operacionais</td><td class="r num">${F.n(m.dre.despOp)}</td></tr>
+<tr><td style="padding-left:24px">Despesas administrativas e comerciais</td><td class="r num">${F.n(m.dre.despOp)}</td></tr>
+<tr><td>(−) Despesas líquidas financeiras</td><td class="r num">${F.n(m.dre.despFinLiq)}</td></tr>
+<tr><td style="padding-left:24px">(−) Despesas financeiras</td><td class="r num">${F.n(m.dre.despFin)}</td></tr>
+<tr><td style="padding-left:24px">(+) Receitas financeiras</td><td class="r num">${F.n(m.dre.recFin)}</td></tr>
+<tr class="total"><td>= Lucro antes do IRPJ e CSLL</td><td class="r num">${F.n(m.dre.lair)}</td></tr>
+<tr><td>Provisão para IRPJ (${F.p(m.fiscais.irpj)}) e CSLL (${F.p(m.fiscais.csll)})</td><td class="r num">${F.n(m.dre.provisao)}</td></tr>
+<tr class="total"><td>= Lucro do exercício</td><td class="r num" style="color:${ok(m.dre.lucro)&&m.dre.lucro>=m.S.lucroMin?"var(--ok)":"var(--bad)"}">${F.n(m.dre.lucro)}</td></tr>
+</tbody></table></div>
+<div class="kpi" style="margin-bottom:18px">
+<div><div class="lbl">Receita</div><div class="val num">${F.m(m.dre.receita)}</div></div>
+<div><div class="lbl">Custos e despesas</div><div class="val num">${F.m(m.dre.resumoCusto)}</div></div>
+<div><div class="lbl">Lucro do exercício</div><div class="val num ${ok(m.dre.lucro)?(m.dre.lucro>=m.S.lucroMin?"pos":"neg"):""}">${F.m(m.dre.lucro)}</div></div>
+</div>
+<div class="card"><h3>Da receita ao lucro</h3>${svgCascata(m)}</div>`;
+
+/* --------------------------------- PV */
+V.pv=m=>head("Pedido de vendas e faturamento","Toda a produção do mês vai para um único cliente, com pagamento em 60 dias.")+`
+<div class="card"><h3>PV / Nota fiscal 1</h3>
+<table><tbody><tr><th style="width:120px">Cliente</th><td>${esc(m.pv.cliente)}</td>
+<th style="width:100px">Emissão</th><td class="num">02/09/2022</td>
+<th style="width:110px">Dias pagto.</th><td class="num">${F.i(m.pv.prazo)}</td></tr></tbody></table>
+<table style="margin-top:14px"><thead><tr><th>Item</th><th>Produto</th><th>Un.</th>
+<th class="r">Quantidade</th><th class="r">Preço unit.</th><th class="r">Preço total</th></tr></thead>
+<tbody><tr><td class="num">01</td><td>Caixa com ${F.i(m.S.paesPorCaixa)} pães</td><td>Cx</td>
+<td class="r num">${F.n(m.pv.qt)}</td><td class="r num">${F.n(m.pv.pu)}</td><td class="r num">${F.n(m.pv.linha)}</td></tr>
+<tr class="total"><td colspan="5">Total da NF</td><td class="r num">${F.n(m.pv.total)}</td></tr></tbody></table>
+<table style="margin-top:14px"><thead><tr><th class="r">ICMS</th><th class="r">PIS</th><th class="r">COFINS</th></tr></thead>
+<tbody><tr><td class="r num">${F.n(m.pv.icms)}</td><td class="r num">${F.n(m.pv.pis)}</td><td class="r num">${F.n(m.pv.cofins)}</td></tr></tbody></table>
+<p class="foot">Quantidade = caixas por mês × % de compra do cliente. Preço unitário = preço de venda por caixa.</p></div>`;
+
+/* --------------------------------- Kardex completo */
+V.ke=m=>head("Kardex completo","Entradas pela nota fiscal, saídas pelo apontamento da OP. O saldo é o que fica no estoque.")+`
+
+<div class="card"><table><thead>
+<tr><th rowspan="2">Produto</th><th rowspan="2">Un.</th><th colspan="3" class="r">Entradas</th>
+<th colspan="3" class="r">Saídas</th><th colspan="2" class="r">Saldo</th></tr>
+<tr><th class="r">Qtde</th><th class="r">Custo unit.</th><th class="r">Custo total</th>
+<th class="r">Qtde</th><th class="r">Custo unit.</th><th class="r">Custo total</th>
+<th class="r">Qtde</th><th class="r">Custo total</th></tr></thead><tbody>
+${m.ke.itens.map(r=>`<tr><td>${esc(r.nome)}</td><td>${esc(r.un)}</td>
+<td class="r num">${F.n(r.d)}</td><td class="r num">${F.n(r.e,4)}</td><td class="r num">${F.n(r.f)}</td>
+<td class="r num">${F.n(r.g)}</td><td class="r num">${F.n(r.h,4)}</td><td class="r num">${F.n(r.i)}</td>
+<td class="r num">${F.n(r.j)}</td><td class="r num">${F.n(r.k)}</td></tr>`).join("")}
+<tr class="total"><td colspan="4">Total entradas</td><td class="r num">${F.n(m.ke.entradas)}</td>
+<td colspan="2">Total saídas</td><td class="r num">${F.n(m.ke.saidas)}</td>
+<td>Saldo</td><td class="r num">${F.n(m.ke.saldo)}</td></tr>
+</tbody></table></div>`;
+
+/* --------------------------------- Apuração */
+V.apur=m=>head("Apuração de impostos","Créditos das compras contra débitos das saídas. Saldo positivo significa imposto a recolher.")+`
+<div class="card"><table><thead><tr><th>Imposto</th><th class="r">Créditos (nas compras) R$</th>
+<th class="r">Débitos (nas saídas) R$</th><th class="r">Saldo R$</th><th>Status</th></tr></thead><tbody>
+${m.apuracao.itens.map(r=>`<tr><td>${esc(r.nome)}</td><td class="r num">${F.n(r.cr)}</td><td class="r num">${F.n(r.db)}</td>
+<td class="r num">${F.n(r.saldo)}</td><td>${r.saldo>0?"A recolher":"—"}</td></tr>`).join("")}
+<tr class="total"><td>Total</td><td class="r num">${F.n(m.apuracao.total.cr)}</td><td class="r num">${F.n(m.apuracao.total.db)}</td>
+<td class="r num">${F.n(m.apuracao.total.saldo)}</td><td>${m.apuracao.total.saldo>0?"A recolher":"—"}</td></tr>
+</tbody></table>
+<p class="foot">Créditos vêm da NF1 (matéria-prima). Débitos vêm da nota fiscal de saída.</p></div>`;
+
+/* --------------------------------- Fluxo */
+V.fluxo=m=>head("Fluxo de caixa","Capital social, pagamentos e o recebimento do faturamento em 60 dias. É aqui que a decisão de prazo aparece.")+`
+<div class="card"><table><thead><tr><th>Data</th><th>Descrição</th><th class="r">Pagar R$</th>
+<th class="r">Receber R$</th><th class="r">Saldo R$</th></tr></thead><tbody>
+${m.fluxo.map(r=>`<tr><td class="num">${esc(r.dt)}</td><td>${esc(r.ds)}</td>
+<td class="r num">${F.n(r.pg)}</td><td class="r num">${F.n(r.rc)}</td>
+<td class="r num" style="${ok(r.saldo)&&r.saldo<0?"color:var(--bad);font-weight:600":""}">${F.n(r.saldo)}</td></tr>`).join("")}
+</tbody></table>
+<p class="foot">O capital social (${F.m(m.S.capitalSocial)}) vem do Setup. O imobilizado é pago em três parcelas de ${F.n(m.nf2.total/3)}.</p></div>
+<div class="card"><h3>Saldo acumulado</h3>${svgCaixa(m)}</div>`;
+
+/* --------------------------------- Alertas */
+V.alertas=m=>head("Alertas do case","O semáforo valida cada decisão contra as regras do cenário. Todos precisam ficar verdes.")+`
+${m.alertas.every(a=>a.st==="idle")?`<div class="notice">Informe a alíquota de PIS na guia <strong>Fiscais</strong> para armar as validações.</div>`:""}
+<div class="card"><div class="alerts">
+${alertasHTML(m)}
+</div></div>
+<div class="kpi">
+<div><div class="lbl">Preço por pão</div><div class="val num">${F.m(m.fpv.precoPao)}</div></div>
+<div><div class="lbl">Lucro do exercício</div><div class="val num ${ok(m.dre.lucro)?(m.dre.lucro>=m.S.lucroMin?"pos":"neg"):""}">${F.m(m.dre.lucro)}</div></div>
+<div><div class="lbl">Caixas por mês</div><div class="val num">${F.i(m.eng.caixasMes)}</div></div>
+</div>
+<p class="foot">Terminou? Volte ao topo e clique em <strong>Salvar respostas</strong> para gerar o arquivo que deve ser enviado ao instrutor.</p>`;
+
+/* --------------------------------- Setup (protegido) */
+V.setup=m=>{
+  if(!setupLiberado) return `
+  <div class="lockbox card">
+    <h3 style="margin-bottom:6px">Área do instrutor</h3>
+    <p class="foot" style="margin:0 0 4px">Esta guia define os parâmetros do jogo. Informe a senha para abrir.</p>
+    <input type="password" id="senha" placeholder="Senha" autocomplete="off">
+    <div class="err">${esc(senhaErro)}</div>
+    <button class="primary" id="btnSenha" style="width:100%">Abrir Setup</button>
+  </div>`;
+  return head("Setup do jogo","Parâmetros que alimentam todas as guias. Alterar aqui muda a simulação inteira, ao vivo.")+`
+  <div class="notice">Deixe um campo em branco para voltar ao valor padrão. <button id="btnLock" style="margin-left:8px">Bloquear novamente</button></div>
+  ${SETUP_CAMPOS.map(([grupo,campos])=>`
+  <div class="card"><h3>${esc(grupo)}</h3><div class="fields">
+  ${campos.map(([k,rot,t])=>`<label>${esc(rot)}</label><div>${celSetup(k,t)}</div>`).join("")}
+  </div></div>`).join("")}
+  <div class="card"><h3>Checklist do ambiente Protheus (C38:C50)</h3>
+  <p class="foot" style="margin:-8px 0 12px">Preparação anterior à turma. Nenhum destes itens entra em cálculo — na planilha original também não.</p>
+  <table><thead><tr><th>Etapa</th><th class="r" style="width:90px">Concluída</th></tr></thead><tbody>
+  ${CHECKLIST.map((t,i)=>`<tr><td>${esc(t)}</td><td class="r">
+    <input type="checkbox" data-chk="${i}" ${CHK[i]?"checked":""} style="width:auto">
+  </td></tr>`).join("")}
+  <tr class="total"><td>Concluídas</td><td class="r num">${CHECKLIST.filter((_,i)=>CHK[i]).length} / ${CHECKLIST.length}</td></tr>
+  </tbody></table></div>
+  <div class="card"><h3>Constantes do motor (fora do Setup da planilha)</h3><table><tbody>
+  <tr><th style="width:400px">Tempo do processo (Eng. F4:F12)</th><td class="r num">${F.i(m.eng.tempoMin)} min</td></tr>
+  <tr><th>Masseiras disponíveis (Eng. C7)</th><td class="r num">${F.i(m.eng.masseiras)}</td></tr>
+  <tr><th>Horas na semana / no sábado (Eng. C5, C6)</th><td class="r num">${F.n(m.eng.horasSemana)} / ${F.n(m.eng.horasSabado)}</td></tr>
+  <tr><th>Capacidade por masseira (PC2 E5)</th><td class="r num">400</td></tr>
+  <tr><th>Pesquisa de preço do saco plástico (PC1 I11)</th><td class="r num">0,1723</td></tr>
+  <tr><th>Pesquisa de preço da caixa (PC1 I12)</th><td class="r num">1,00</td></tr>
+  </tbody></table></div>`;
+};
+
+/* =====================================================================
+   EVENTOS
+   ===================================================================== */
+function formata(v,tipo){
+  if(vazio(v)) return "";
+  const x=num(v);
+  if(!isFinite(x)) return v;
+  return fmt(x,2);
+}
+function bind(){
+  document.querySelectorAll("nav a").forEach(a=>a.onclick=()=>{
+    atual=a.dataset.guia; senhaErro=""; render(); window.scrollTo(0,0);});
+
+  const foco=el=>el.dataset.campo
+    ? el.dataset.campo+"|"+(el.dataset.idx??"")+"|"+(el.dataset.tipo??"")
+    : "setup|"+el.dataset.setup;
+  const restaura=(id,pos)=>{
+    const back=[...document.querySelectorAll("[data-campo],[data-setup]")].find(e=>foco(e)===id);
+    if(!back) return;
+    back.focus();
+    try{ const p = pos==null?back.value.length:Math.min(pos,back.value.length);
+         back.setSelectionRange(p,p); }catch(_){}
+  };
+
+  document.querySelectorAll("[data-campo]").forEach(el=>{
+    const ev = el.tagName==="SELECT" ? "change" : "input";
+    el.addEventListener(ev,()=>{
+      const c=el.dataset.campo, i=el.dataset.idx;
+      const v = c==="opcaoForno" ? parseInt(el.value,10) : el.value;
+      const pos = el.tagName==="SELECT" ? null : el.selectionStart;
+      if(i===undefined) I[c]=v; else I[c][+i]=v;
+      const id=foco(el); render(); restaura(id,pos);
+    });
+    if(el.tagName!=="SELECT" && el.dataset.tipo!=="texto" && el.type!=="range"){
+      el.addEventListener("blur",()=>{
+        if(renderizando || !el.isConnected) return;   // saiu do DOM pelo render, não por ação do usuário
+        const c=el.dataset.campo, i=el.dataset.idx, f=formata(el.value,el.dataset.tipo);
+        const atualV = i===undefined ? I[c] : I[c][+i];
+        if(f===atualV) return;             // nada mudou, não precisa reconstruir
+        if(i===undefined) I[c]=f; else I[c][+i]=f;
+        render();
+      });
+    }
+  });
+
+  document.querySelectorAll("[data-setup]").forEach(el=>{
+    el.addEventListener("input",()=>{
+      const pos=el.selectionStart;
+      SRAW[el.dataset.setup]=el.value;
+      const id=foco(el); render(); restaura(id,pos);
+    });
+    el.addEventListener("blur",()=>{
+      if(renderizando || !el.isConnected) return;
+      const f=formata(el.value,el.dataset.tipo);
+      if(f===SRAW[el.dataset.setup]) return;
+      SRAW[el.dataset.setup]=f; render();
+    });
+  });
+
+  document.querySelectorAll("[data-chk]").forEach(el=>{
+    el.addEventListener("change",()=>{ CHK[el.dataset.chk]=el.checked; render(); });
+  });
+
+  const bs=document.getElementById("btnSenha");
+  if(bs){
+    const tentar=()=>{
+      const v=document.getElementById("senha").value;
+      if(v===SENHA_SETUP){ setupLiberado=true; senhaErro=""; }
+      else senhaErro="Senha incorreta.";
+      render();
+    };
+    bs.onclick=tentar;
+    document.getElementById("senha").addEventListener("keydown",e=>{if(e.key==="Enter")tentar();});
+    document.getElementById("senha").focus();
+  }
+  const bl=document.getElementById("btnLock");
+  if(bl) bl.onclick=()=>{setupLiberado=false; atual="inicio"; render();};
+}
+
+/* --- exportar / importar --- */
+function nomeArquivo(ext){
+  const base=(I.nome||"case-start").normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-zA-Z0-9]+/g,"-").replace(/^-|-$/g,"").toLowerCase();
+  return `case-start_${base}_${new Date().toISOString().slice(0,10)}.${ext}`;
+}
+function baixar(conteudo,nome,mime){
+  const b=new Blob([conteudo],{type:mime+";charset=utf-8"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(b); a.download=nome; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+}
+document.getElementById("btnExport").onclick=()=>{
+  const m=calc();
+  baixar(JSON.stringify({
+    versao:"case-start-2026.2",
+    participante:{nome:I.nome,email:I.email},
+    regime_tributario:I.regime,
+    gerado_em:new Date().toISOString(),
+    respostas:I,
+    setup_alterado:Object.keys(SRAW).length?SRAW:null,
+    checklist_protheus:CHECKLIST.map((t,i)=>({etapa:t,concluida:!!CHK[i]})),
+    resultado:{
+      paes_mes:m.eng.paesMes, caixas_mes:m.eng.caixasMes,
+      custo_total:m.fpv.custoTotal, markup:m.fpv.markup,
+      preco_caixa:m.fpv.precoCaixa, preco_pao:m.fpv.precoPao,
+      receita:m.dre.receita, lucro_exercicio:m.dre.lucro,
+      saldo_final_caixa:m.fluxo[m.fluxo.length-1].saldo
+    },
+    alertas:m.alertas.map(a=>({status:a.st,mensagem:a.txt}))
+  },null,2),nomeArquivo("json"),"application/json");
+};
+document.getElementById("btnCsv").onclick=()=>{
+  const m=calc(), q=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+  const L=[["Campo","Valor"],
+    ["Nome",I.nome],["E-mail",I.email],["Regime de tributação",I.regime],
+    ["PIS %",I.pis],["COFINS %",I.cofins],["IRPJ %",I.irpj],["CSLL %",I.csll],
+    ["Salário padeiro",I.salPadeiro],["Salário aux. adm.",I.salAdm],["Salário assist. entregas",I.salEntregas],
+    ["Vale transporte",I.vt],["Cesta básica",I.cesta],["Motivo sem VT",I.motivoVT],
+    ["Horário de funcionamento",I.horario],
+    ...MP.map((p,i)=>[`Conversão 450g — ${p.nome}`,I.conv[i]]),
+    ["Opção de forno",I.opcaoForno],["Quantidade de fornos",I.qtdeFornos],
+    ...MP.map((p,i)=>[`Pesquisa de preço — ${p.nome}`,I.precoMP[i]]),
+    ...MP.map((p,i)=>[`Link — ${p.nome}`,I.linkMP[i]]),
+    ["Preço computador",I.precoComputador],
+    ["Depreciação equipamentos %",I.depreciacao[0]],["Depreciação móveis %",I.depreciacao[1]],
+    ["Depreciação computadores %",I.depreciacao[2]],
+    ["Aluguel",I.aluguel],["Margem de lucro %",I.margemLucro],
+    ["",""],
+    ["Pães por mês",F.n(m.eng.paesMes)],["Caixas por mês",F.i(m.eng.caixasMes)],
+    ["Custo total",F.n(m.fpv.custoTotal)],["Markup",F.n(m.fpv.markup,4)],
+    ["Preço por caixa",F.n(m.fpv.precoCaixa)],["Preço por pão",F.n(m.fpv.precoPao)],
+    ["Receita",F.n(m.dre.receita)],["Lucro do exercício",F.n(m.dre.lucro)],
+    ["Saldo final de caixa",F.n(m.fluxo[m.fluxo.length-1].saldo)]
+  ];
+  baixar("\uFEFF"+L.map(r=>r.map(q).join(";")).join("\r\n"),nomeArquivo("csv"),"text/csv");
+};
+let projecao=false;
+document.getElementById("btnProj").onclick=()=>{
+  projecao=!projecao;
+  document.body.classList.toggle("proj",projecao);
+  document.getElementById("btnProj").textContent = projecao?"Sair da projeção":"Modo projeção";
+};
+document.getElementById("btnImport").onclick=()=>document.getElementById("fileImport").click();
+document.getElementById("fileImport").onchange=e=>{
+  const f=e.target.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const p=JSON.parse(r.result), src=p.respostas||p;
+      Object.keys(I).forEach(k=>{ if(k in src) I[k]=src[k]; });
+      if(p.setup_alterado) Object.assign(SRAW,p.setup_alterado);
+      if(Array.isArray(p.checklist_protheus)) p.checklist_protheus.forEach((c,i)=>CHK[i]=!!c.concluida);
+      render(); alert("Respostas carregadas.");
+    }catch(_){ alert("Não foi possível ler este arquivo. Use um .json gerado por esta página."); }
+    e.target.value="";
+  };
+  r.readAsText(f);
+};
+window.addEventListener("beforeunload",e=>{
+  if(I.nome||I.pis||I.salPadeiro){ e.preventDefault(); e.returnValue=""; }
+});
+
+render();
+</script>
+</body>
+</html>
