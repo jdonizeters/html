@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparador de Preços</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        /* Vertical portrait container restriction for optimal mobile/desktop feel */
+        .app-container {
+            max-width: 440px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between py-6 px-4 sm:px-6">
+
+    <!-- Header Section -->
+    <header class="app-container w-full text-center mb-6">
+        <div class="inline-flex items-center justify-center bg-blue-100 text-blue-700 p-3 rounded-full mb-3 shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Comparador de Preços</h1>
+        <p class="text-sm font-medium text-blue-600 mt-1">Encontre a melhor opção de compra rapidamente</p>
+    </header>
+
+    <!-- Main Container -->
+    <main class="app-container w-full flex-1 bg-white shadow-xl rounded-2xl p-6 border border-slate-100 flex flex-col gap-6">
+        
+        <!-- Item 1 Card -->
+        <section class="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-3">
+            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-600 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Item 1
+            </h2>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label for="preco-1" class="block text-xs font-semibold text-slate-600 mb-1">Preço 1 (R$)</label>
+                    <input type="number" id="preco-1" step="any" min="0" placeholder="0.00" 
+                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 text-base shadow-sm transition bg-white">
+                </div>
+                <div>
+                    <label for="qtde-1" class="block text-xs font-semibold text-slate-600 mb-1">Quantidade 1</label>
+                    <input type="number" id="qtde-1" step="any" min="0" placeholder="Ex: 500" 
+                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 text-base shadow-sm transition bg-white">
+                </div>
+            </div>
+        </section>
+
+        <!-- Item 2 Card -->
+        <section class="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-3">
+            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-600 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span> Item 2
+            </h2>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label for="preco-2" class="block text-xs font-semibold text-slate-600 mb-1">Preço 2 (R$)</label>
+                    <input type="number" id="preco-2" step="any" min="0" placeholder="0.00" 
+                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 text-base shadow-sm transition bg-white">
+                </div>
+                <div>
+                    <label for="qtde-2" class="block text-xs font-semibold text-slate-600 mb-1">Quantidade 2</label>
+                    <input type="number" id="qtde-2" step="any" min="0" placeholder="Ex: 1000" 
+                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 text-base shadow-sm transition bg-white">
+                </div>
+            </div>
+        </section>
+
+        <!-- Botão Analisar -->
+        <button type="button" id="btn-analisar" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold rounded-xl shadow-md transition duration-200 flex items-center justify-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            Analisar
+        </button>
+
+        <!-- Resultado Section -->
+        <section id="resultado-container" class="hidden flex-col items-center justify-center p-4 rounded-xl border transition-all duration-300 text-center space-y-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Recomendação</span>
+            <div id="resultado-texto" class="text-xl sm:text-2xl font-bold px-4 py-2 rounded-lg transition-colors inline-block"></div>
+            <p id="detalhes-calculo" class="text-xs text-slate-600 mt-1"></p>
+        </section>
+
+        <!-- Botão Limpar -->
+        <button type="button" id="btn-limpar" class="w-full py-3 px-4 bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-700 font-semibold rounded-xl transition duration-200">
+            Limpar
+        </button>
+
+    </main>
+
+    <!-- Custom Modal for Alerts (No alert() used) -->
+    <div id="custom-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 text-center shadow-2xl space-y-4">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-amber-100 text-amber-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900">Atenção</h3>
+            <p id="modal-message" class="text-sm text-slate-600"></p>
+            <button type="button" id="modal-close" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition">
+                Entendido
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements mapping
+        const inputPreco1 = document.getElementById('preco-1');
+        const inputQtde1 = document.getElementById('qtde-1');
+        const inputPreco2 = document.getElementById('preco-2');
+        const inputQtde2 = document.getElementById('qtde-2');
+
+        const btnAnalisar = document.getElementById('btn-analisar');
+        const btnLimpar = document.getElementById('btn-limpar');
+
+        const resultadoContainer = document.getElementById('resultado-container');
+        const resultadoTexto = document.getElementById('resultado-texto');
+        const detalhesCalculo = document.getElementById('detalhes-calculo');
+
+        const customModal = document.getElementById('custom-modal');
+        const modalMessage = document.getElementById('modal-message');
+        const modalClose = document.getElementById('modal-close');
+
+        // Helper function to show custom modal alert
+        function showAlert(message) {
+            modalMessage.textContent = message;
+            customModal.classList.remove('hidden');
+            customModal.classList.add('flex');
+        }
+
+        modalClose.addEventListener('click', () => {
+            customModal.classList.remove('flex');
+            customModal.classList.add('hidden');
+        });
+
+        // Validation helper
+        function validarCampos() {
+            const campos = [
+                { el: inputPreco1, nome: 'Preço 1' },
+                { el: inputQtde1, nome: 'Quantidade 1' },
+                { el: inputPreco2, nome: 'Preço 2' },
+                { el: inputQtde2, nome: 'Quantidade 2' }
+            ];
+
+            for (let c of campos) {
+                const val = c.el.value.trim();
+                if (val === '') {
+                    showAlert(`O campo '${c.nome}' não pode estar vazio.`);
+                    c.el.focus();
+                    return false;
+                }
+                const num = Number(val);
+                if (isNaN(num) || num <= 0) {
+                    showAlert(`O campo '${c.nome}' deve ser um número válido maior que zero.`);
+                    c.el.focus();
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Analisar / Calcular function
+        function analisarPrecos() {
+            if (!validarCampos()) {
+                return;
+            }
+
+            const preco1 = parseFloat(inputPreco1.value);
+            const qtde1 = parseFloat(inputQtde1.value);
+            const preco2 = parseFloat(inputPreco2.value);
+            const qtde2 = parseFloat(inputQtde2.value);
+
+            // Calculation formula: Equip = (Preço1 / Qtde1) * Qtde2
+            const equivalente = (preco1 / qtde1) * qtde2;
+
+            resultadoContainer.classList.remove('hidden');
+            resultadoContainer.classList.add('flex');
+
+            // Business logic comparison
+            if (equivalente < preco2) {
+                resultadoContainer.className = "flex flex-col items-center justify-center p-4 rounded-xl border bg-blue-50 border-blue-200 transition-all duration-300 text-center space-y-2";
+                resultadoTexto.className = "text-xl sm:text-2xl font-bold px-4 py-1.5 rounded-lg bg-blue-600 text-white shadow-sm inline-block";
+                resultadoTexto.textContent = "Comprar Item 1";
+                detalhesCalculo.textContent = `O valor equivalente do Item 1 para a quantidade do Item 2 seria R$ ${equivalente.toFixed(2)}, sendo mais econômico que o Preço 2 (R$ ${preco2.toFixed(2)}).`;
+            } else if (equivalente > preco2) {
+                resultadoContainer.className = "flex flex-col items-center justify-center p-4 rounded-xl border bg-emerald-50 border-emerald-200 transition-all duration-300 text-center space-y-2";
+                resultadoTexto.className = "text-xl sm:text-2xl font-bold px-4 py-1.5 rounded-lg bg-emerald-600 text-white shadow-sm inline-block";
+                resultadoTexto.textContent = "Comprar Item 2";
+                detalhesCalculo.textContent = `O valor equivalente do Item 1 seria R$ ${equivalente.toFixed(2)}, tornando o Item 2 (R$ ${preco2.toFixed(2)}) mais vantajoso.`;
+            } else {
+                resultadoContainer.className = "flex flex-col items-center justify-center p-4 rounded-xl border bg-amber-50 border-amber-200 transition-all duration-300 text-center space-y-2";
+                resultadoTexto.className = "text-xl sm:text-2xl font-bold px-4 py-1.5 rounded-lg bg-amber-600 text-white shadow-sm inline-block";
+                resultadoTexto.textContent = "Empate Técnico";
+                detalhesCalculo.textContent = `Ambas as opções possuem exatamente o mesmo custo por unidade (R$ ${(preco1/qtde1).toFixed(4)} cada).`;
+            }
+        }
+
+        // Limpar function
+        function limparTudo() {
+            inputPreco1.value = '';
+            inputQtde1.value = '';
+            inputPreco2.value = '';
+            inputQtde2.value = '';
+
+            resultadoContainer.classList.remove('flex');
+            resultadoContainer.classList.add('hidden');
+            resultadoTexto.textContent = '';
+            detalhesCalculo.textContent = '';
+
+            // Focus automatically on Preço 1
+            inputPreco1.focus();
+        }
+
+        // Event listeners binding
+        btnAnalisar.addEventListener('click', analisarPrecos);
+        btnLimpar.addEventListener('click', limparTudo);
+
+        // Initial focus on window load
+        window.onload = function() {
+            inputPreco1.focus();
+        };
+    </script>
+</body>
+</html>

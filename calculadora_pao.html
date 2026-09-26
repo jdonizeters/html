@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bruce - Calculadora do Pão</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7fafc;
+        }
+        /* Vertical constraint container for mobile-first/desktop portrait feel */
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between py-6 px-4 sm:px-6">
+
+    <header class="app-container w-full text-center mb-6">
+        <div class="inline-flex items-center justify-center bg-amber-100 text-amber-800 p-3 rounded-full mb-3 shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round5" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Bruce</h1>
+        <p class="text-sm font-medium text-amber-700 mt-1">Calculadora do Pão de Fermentação Natural</p>
+    </header>
+
+    <main class="app-container w-full flex-1 bg-white shadow-xl rounded-2xl p-6 border border-slate-100 flex flex-col gap-6">
+        
+        <!-- Editable Fields Section -->
+        <section class="space-y-4">
+            <div class="flex items-center justify-between border-b pb-2">
+                <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">Parâmetros da Receita</h2>
+                <button type="button" id="btn-restore" class="text-xs text-amber-600 hover:text-amber-700 font-medium underline transition">
+                    Restaurar Padrões
+                </button>
+            </div>
+
+            <!-- Peso Levain -->
+            <div>
+                <label for="peso-levain" class="block text-sm font-medium text-slate-700 mb-1">Peso Levain (g)</label>
+                <input type="number" id="peso-levain" min="1" step="1" placeholder="Ex: 150" 
+                    class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-slate-800 text-base shadow-sm transition">
+            </div>
+
+            <!-- Grid for Percentages -->
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label for="perc-levain" class="block text-xs font-semibold text-slate-600 mb-1">% Levain</label>
+                    <input type="number" id="perc-levain" min="1" step="1" value="30"
+                        class="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-slate-800 text-sm shadow-sm transition">
+                </div>
+                <div>
+                    <label for="perc-agua" class="block text-xs font-semibold text-slate-600 mb-1">% Água</label>
+                    <input type="number" id="perc-agua" min="1" step="1" value="65"
+                        class="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-slate-800 text-sm shadow-sm transition">
+                </div>
+                <div>
+                    <label for="perc-azeite" class="block text-xs font-semibold text-slate-600 mb-1">% Azeite</label>
+                    <input type="number" id="perc-azeite" min="1" step="1" value="4"
+                        class="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-slate-800 text-sm shadow-sm transition">
+                </div>
+                <div>
+                    <label for="perc-sal" class="block text-xs font-semibold text-slate-600 mb-1">% Sal</label>
+                    <input type="number" id="perc-sal" min="1" step="1" value="2"
+                        class="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-slate-800 text-sm shadow-sm transition">
+                </div>
+            </div>
+
+            <div>
+                <label for="perc-graos" class="block text-xs font-semibold text-slate-600 mb-1">% Grãos</label>
+                <input type="number" id="perc-graos" min="1" step="1" value="10"
+                    class="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-slate-800 text-sm shadow-sm transition">
+            </div>
+        </section>
+
+        <!-- Botão Calcular -->
+        <button type="button" id="btn-calcular" class="w-full py-3.5 px-4 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white font-semibold rounded-xl shadow-md transition duration-200 flex items-center justify-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            Calcular
+        </button>
+
+        <!-- Labels / Resultados Section -->
+        <section class="space-y-3 pt-2">
+            <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500 border-b pb-2">Resultados da Receita</h2>
+            
+            <div class="grid grid-cols-1 gap-2.5">
+                <!-- Farinha -->
+                <div class="flex items-center justify-between p-3.5 bg-amber-50 rounded-xl border border-amber-200">
+                    <span class="font-medium text-slate-700">Farinha</span>
+                    <span id="res-farinha" class="font-bold text-amber-900 text-lg">0 g</span>
+                </div>
+                <!-- Água -->
+                <div class="flex items-center justify-between p-3.5 bg-sky-50 rounded-xl border border-sky-200">
+                    <span class="font-medium text-slate-700">Água</span>
+                    <span id="res-agua" class="font-bold text-sky-900 text-lg">0 g</span>
+                </div>
+                <!-- Azeite -->
+                <div class="flex items-center justify-between p-3.5 bg-emerald-50 rounded-xl border border-emerald-200">
+                    <span class="font-medium text-slate-700">Azeite</span>
+                    <span id="res-azeite" class="font-bold text-emerald-900 text-lg">0 g</span>
+                </div>
+                <!-- Sal -->
+                <div class="flex items-center justify-between p-3.5 bg-rose-50 rounded-xl border border-rose-200">
+                    <span class="font-medium text-slate-700">Sal</span>
+                    <span id="res-sal" class="font-bold text-rose-900 text-lg">0 g</span>
+                </div>
+                <!-- Grãos -->
+                <div class="flex items-center justify-between p-3.5 bg-amber-100 rounded-xl border border-amber-300">
+                    <span class="font-medium text-slate-700">Grãos</span>
+                    <span id="res-graos" class="font-bold text-amber-950 text-lg">0 g</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Botão Limpar -->
+        <button type="button" id="btn-limpar" class="w-full py-3 px-4 bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-700 font-semibold rounded-xl transition duration-200">
+            Limpar
+        </button>
+
+    </main>
+
+    <!-- Modal / Custom Alert Message Box (No alert() used) -->
+    <div id="custom-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 text-center shadow-2xl space-y-4">
+            <div id="modal-icon" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-amber-100 text-amber-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h3 id="modal-title" class="text-lg font-bold text-slate-900">Atenção</h3>
+            <p id="modal-message" class="text-sm text-slate-600"></p>
+            <button type="button" id="modal-close" class="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl transition">
+                Entendido
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Default values definition
+        const DEFAULT_VALUES = {
+            pesoLevain: '',
+            percLevain: 30,
+            percAgua: 65,
+            percAzeite: 4,
+            percSal: 2,
+            percGraos: 10
+        };
+
+        // DOM Elements mapping
+        const inputPesoLevain = document.getElementById('peso-levain');
+        const inputPercLevain = document.getElementById('perc-levain');
+        const inputPercAgua = document.getElementById('perc-agua');
+        const inputPercAzeite = document.getElementById('perc-azeite');
+        const inputPercSal = document.getElementById('perc-sal');
+        const inputPercGraos = document.getElementById('perc-graos');
+
+        const btnCalcular = document.getElementById('btn-calcular');
+        const btnLimpar = document.getElementById('btn-limpar');
+        const btnRestore = document.getElementById('btn-restore');
+
+        const resFarinha = document.getElementById('res-farinha');
+        const resAgua = document.getElementById('res-agua');
+        const resAzeite = document.getElementById('res-azeite');
+        const resSal = document.getElementById('res-sal');
+        const resGraos = document.getElementById('res-graos');
+
+        const customModal = document.getElementById('custom-modal');
+        const modalMessage = document.getElementById('modal-message');
+        const modalClose = document.getElementById('modal-close');
+
+        // Helper function to show custom alert message box (avoids alert())
+        function showAlert(message) {
+            modalMessage.textContent = message;
+            customModal.classList.remove('hidden');
+            customModal.classList.add('flex');
+        }
+
+        modalClose.addEventListener('click', () => {
+            customModal.classList.remove('flex');
+            customModal.classList.add('hidden');
+        });
+
+        // Load values from localStorage on startup
+        function loadSavedValues() {
+            inputPesoLevain.value = localStorage.getItem('bruce_peso_levain') !== null ? localStorage.getItem('bruce_peso_levain') : DEFAULT_VALUES.pesoLevain;
+            inputPercLevain.value = localStorage.getItem('bruce_perc_levain') !== null ? localStorage.getItem('bruce_perc_levain') : DEFAULT_VALUES.percLevain;
+            inputPercAgua.value = localStorage.getItem('bruce_perc_agua') !== null ? localStorage.getItem('bruce_perc_agua') : DEFAULT_VALUES.percAgua;
+            inputPercAzeite.value = localStorage.getItem('bruce_perc_azeite') !== null ? localStorage.getItem('bruce_perc_azeite') : DEFAULT_VALUES.percAzeite;
+            inputPercSal.value = localStorage.getItem('bruce_perc_sal') !== null ? localStorage.getItem('bruce_perc_sal') : DEFAULT_VALUES.percSal;
+            inputPercGraos.value = localStorage.getItem('bruce_perc_graos') !== null ? localStorage.getItem('bruce_perc_graos') : DEFAULT_VALUES.percGraos;
+
+            // If there's a valid peso levain stored, compute automatically
+            if (inputPesoLevain.value) {
+                calcularReceita(false);
+            }
+        }
+
+        // Save current input values to localStorage
+        function saveValues() {
+            localStorage.setItem('bruce_peso_levain', inputPesoLevain.value);
+            localStorage.setItem('bruce_perc_levain', inputPercLevain.value);
+            localStorage.setItem('bruce_perc_agua', inputPercAgua.value);
+            localStorage.setItem('bruce_perc_azeite', inputPercAzeite.value);
+            localStorage.setItem('bruce_perc_sal', inputPercSal.value);
+            localStorage.setItem('bruce_perc_graos', inputPercGraos.value);
+        }
+
+        // Validate that fields only accept numbers greater than zero and integers
+        function validateInputs() {
+            const fields = [
+                { el: inputPesoLevain, name: 'Peso Levain' },
+                { el: inputPercLevain, name: '% Levain' },
+                { el: inputPercAgua, name: '% Água' },
+                { el: inputPercAzeite, name: '% Azeite' },
+                { el: inputPercSal, name: '% Sal' },
+                { el: inputPercGraos, name: '% Grãos' }
+            ];
+
+            for (let f of fields) {
+                const val = f.el.value.trim();
+                if (val === '') {
+                    showAlert(`O campo '${f.name}' não pode estar vazio.`);
+                    f.el.focus();
+                    return false;
+                }
+                const num = Number(val);
+                if (!Number.isInteger(num) || num <= 0) {
+                    showAlert(`O campo '${f.name}' deve conter apenas números inteiros maiores que zero.`);
+                    f.el.focus();
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Core calculation logic
+        function calcularReceita(validate = true) {
+            if (validate && !validateInputs()) {
+                return;
+            }
+
+            // Save state on calculation
+            saveValues();
+
+            const pesoLevain = parseFloat(inputPesoLevain.value);
+            const percLevain = parseFloat(inputPercLevain.value);
+            const percAgua = parseFloat(inputPercAgua.value);
+            const percAzeite = parseFloat(inputPercAzeite.value);
+            const percSal = parseFloat(inputPercSal.value);
+            const percGraos = parseFloat(inputPercGraos.value);
+
+            // Formulas as specified with integer rounding (Math.round)
+            const farinha = Math.round(pesoLevain / (percLevain / 100));
+            const agua = Math.round(farinha * (percAgua / 100));
+            const azeite = Math.round(farinha * (percAzeite / 100));
+            const sal = Math.round(farinha * (percSal / 100));
+            const graos = Math.round(farinha * (percGraos / 100));
+
+            // Display results in whole integer values
+            resFarinha.textContent = `${farinha} g`;
+            resAgua.textContent = `${agua} g`;
+            resAzeite.textContent = `${azeite} g`;
+            resSal.textContent = `${sal} g`;
+            resGraos.textContent = `${graos} g`;
+        }
+
+        // Action for Clean / Limpar button
+        function limparCampos() {
+            inputPesoLevain.value = '';
+            inputPercLevain.value = '';
+            inputPercAgua.value = '';
+            inputPercAzeite.value = '';
+            inputPercSal.value = '';
+            inputPercGraos.value = '';
+
+            // Clear local storage
+            localStorage.removeItem('bruce_peso_levain');
+            localStorage.removeItem('bruce_perc_levain');
+            localStorage.removeItem('bruce_perc_agua');
+            localStorage.removeItem('bruce_perc_azeite');
+            localStorage.removeItem('bruce_perc_sal');
+            localStorage.removeItem('bruce_perc_graos');
+
+            // Reset labels output
+            resFarinha.textContent = '0 g';
+            resAgua.textContent = '0 g';
+            resAzeite.textContent = '0 g';
+            resSal.textContent = '0 g';
+            resGraos.textContent = '0 g';
+
+            // Focus on Peso Levain
+            inputPesoLevain.focus();
+        }
+
+        // Action for Restore Defaults button
+        function restaurarDefaults() {
+            inputPesoLevain.value = DEFAULT_VALUES.pesoLevain;
+            inputPercLevain.value = DEFAULT_VALUES.percLevain;
+            inputPercAgua.value = DEFAULT_VALUES.percAgua;
+            inputPercAzeite.value = DEFAULT_VALUES.percAzeite;
+            inputPercSal.value = DEFAULT_VALUES.percSal;
+            inputPercGraos.value = DEFAULT_VALUES.percGraos;
+
+            saveValues();
+            resFarinha.textContent = '0 g';
+            resAgua.textContent = '0 g';
+            resAzeite.textContent = '0 g';
+            resSal.textContent = '0 g';
+            resGraos.textContent = '0 g';
+            inputPesoLevain.focus();
+        }
+
+        // Event listeners binding
+        btnCalcular.addEventListener('click', () => calcularReceita(true));
+        btnLimpar.addEventListener('click', limparCampos);
+        btnRestore.addEventListener('click', restaurarDefaults);
+
+        // Initialize app on window load
+        window.onload = function() {
+            loadSavedValues();
+        };
+    </script>
+</body>
+</html>
